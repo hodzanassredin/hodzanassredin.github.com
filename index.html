@@ -1,11 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Hodzanassredin</title>
-</head>
+---
+layout: default
+title: HodzaNassredin
+---
 
-<body>
-<h1>Hodzanassredin</h1>
-</body>
-</html>
+<div id="home">
+  <h1>Blog Posts</h1>
+  <ul class="posts">
+    {% for post in site.posts %}
+      <li><span>{{ post.date | date_to_string }}</span> &raquo; <a href="{{ post.url }}">{{ post.title }}</a></li>
+    {% endfor %}
+  </ul>
 
+  <h1>Projects</h1>
+  <ul class="posts">
+    <li><a href="http://sharpdom.codeplex.com/">SharpDom:</a> Internal C# dsl for building HTML.</li>
+  </ul>
+</div>

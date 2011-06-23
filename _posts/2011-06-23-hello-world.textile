@@ -1,0 +1,10 @@
+---
+layout: post
+title: Hello GitHub
+---
+
+h1. {{ page.title }}
+
+p(meta). 23 June 2011 - Saint Petersburg
+
+Hello world from github.
