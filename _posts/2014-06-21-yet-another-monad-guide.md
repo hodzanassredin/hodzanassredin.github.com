@@ -1,5 +1,5 @@
 ---
-published: true
+published: false
 layout: post
 title: Монады в реальной жизни для занятых консультантов.
 tags : [lessons, fsharp]
@@ -7,7 +7,7 @@ tags : [lessons, fsharp]
 
 ## {{page.title}}
 
-<p class="meta">21 June 2014 &#8211; Saint Petersburg</p>
+<p class="meta">21 June 2014 &#8211; Karelia</p>
 
 {% highlight fsharp %}
 
