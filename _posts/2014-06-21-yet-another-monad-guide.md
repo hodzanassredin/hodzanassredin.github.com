@@ -65,7 +65,7 @@ tags : [lessons, csharp, monad]
 
 Да программа стала безопасней но видно повторяющийся код. Берем на вооружение DRY принцип и убираем повторы.
 
-% highlight csharp %}
+{% highlight csharp %}
 		public static bool Defend (object o)
 		{
 			if (o == null) {
@@ -93,7 +93,7 @@ tags : [lessons, csharp, monad]
 
 Стало немного лучше, но все равно после каждого выхова надо добавлять проверку if. Давайте попробуем убрать управление потоком исполнения в функцию Defend.
 
-% highlight csharp %}
+{% highlight csharp %}
 		public static string Defend (object a, Func<object, string> f)
 		{
 			return a == null ? "Can't compare" : f (a);
@@ -112,7 +112,7 @@ tags : [lessons, csharp, monad]
 
 Выглядит замечательно, но есть проблема в том, что если мы будем использовать как значение например тип Test, то информация о нем пропадет и мы не сможем использовать его свойства и методы.
 
-% highlight csharp %}
+{% highlight csharp %}
 		class Test
 		{
 			public Test ()
@@ -129,7 +129,7 @@ tags : [lessons, csharp, monad]
 		}
 {% endhighlight %}
 Попробуем обойти эту проблемы с помощью переменных типа. 
-% highlight csharp %}
+{% highlight csharp %}
 		public static T Defend2Generic<T> (T a, Func<T, T> f)
 			where T: class//applied only for TA which can be null
 		{
@@ -137,7 +137,7 @@ tags : [lessons, csharp, monad]
 		}
 {% endhighlight %}
 Хм новая ошибка, дело в том, что мы пытаемся вернуть строку вместо типа Test. Что делать? А давайте создадим тип Check<T> который будет содежрать или значение или строку с ошибкой.
-% highlight csharp %}
+{% highlight csharp %}
 		public class Check<T> where T : class
 		{
 			public Check (String errorMessage)
