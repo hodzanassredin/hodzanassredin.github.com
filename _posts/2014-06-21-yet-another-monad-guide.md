@@ -1,7 +1,7 @@
 ---
 published: true
 layout: post
-title: Monads and monad transforers for mere mortals.
+title: Monads and monad transformers for mere mortals.
 tags : [lessons, csharp, monad]
 ---
 
