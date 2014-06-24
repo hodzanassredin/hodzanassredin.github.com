@@ -600,8 +600,293 @@ public interface IFunctor<T>
 Ура. Мы сорвали джек пот, пора просить добавку к зарплате у начальства.
 Теперь у нас есть все чтобы для начала определить интерфейс для монад и наслждаться полиморфным кодом над монадами и получить возможность их композиции.
 {% highlight csharp %}
+	public interface IMonad<T, TMI>
+	{
+		IMonad<TB,TMI> Return<TB> (TB val);
+ 
+		IMonad<TB,TMI> Bind<TB> (Func<T, IMonad<TB,TMI>> f);
+	}
+ 
+	public static class MonadSyntax
+	{
+		public static TM Cast<T, TM, TMB> (this IMonad<T, TMB> m)
+			where TM : IMonad<T, TMB>
+		{
+			return (TM)m;//safe for single inheritance
+		}
+ 
+		public static IMonad<V, TMI> SelectMany<T, TMI, U, V> 
+		(
+			this IMonad<T, TMI> id,
+			Func<T, IMonad<U, TMI>> k,
+			Func<T, U, V> s)
+		{
+			return id.Bind (x => k (x).Bind (y => id.Return (s (x, y))));
+		}
+	}
+ 
+{% endhighlight %}
+На данный момент в коде должно быть все понятно, мы взяли идею из функтора применили к интерефейса для монад который содержит определение методов bind и return. Теперь мы можем переписать Check монаду на основе этого интерфейса и реализовать Async монаду. Async монада может послужить пример того как можно сделать монадическую обертку над существующим генерик типом который не имплементирует интерфейс монады. В нашем случае Async<T> это просто обертка над типом Task<T> и можно думать что это адаптер типа Task к монадическому интерфейсу.
+{% highlight csharp %}
+public class Check
+	{
+		Check ()
+		{
+ 
+		}
+ 
+		public class CheckM<T>: Check, IMonad<T, Check>
+		{
+			#region IMonad implementation
+ 
+			public IMonad<TB, Check> Return<TB> (TB val)
+			{
+				return CheckM<TB>.Success (val);
+			}
+ 
+			public IMonad<TB, Check> Bind<TB> (Func<T, IMonad<TB, Check>> f)
+			{
+				return this.IsFailed ? CheckM<TB>.Fail () : f (this.Value);
+			}
+ 
+			#endregion
+ 
+			CheckM (T val)
+			{
+				Value = val;
+			}
+ 
+			public static CheckM<T> Success (T val)
+			{
+				return new CheckM<T> (val){ IsFailed = false };
+			}
+ 
+			public static CheckM<T> Fail ()
+			{
+				return new CheckM<T> (default(T)){ IsFailed = true };
+			}
+ 
+			public bool IsFailed {
+				get;
+				private set;
+			}
+ 
+			public T Value {
+				get;
+				private set;
+			}
+ 
+			public override string ToString ()
+			{
+				return string.Format ("[Check: IsFailed={0}, Value={1}]", IsFailed, Value);
+			}
+		}
+	}
+ 
+	public static class CheckMonad
+	{
+		public static Func<Check.CheckM<TB>> Lift<TB> (this Func<TB> f)
+			where TB : class
+		{
+			return () => {
+				var res = f ();
+				return res == null ? Check.CheckM<TB>.Fail () : Check.CheckM<TB>.Success (res);
+			};
+		}
+	}
+	public class Async
+	{
+		Async ()
+		{
+ 
+		}
+ 
+		public class AsyncM<T>: Async, IMonad<T, Async>
+		{
+			#region IMonad implementation
+ 
+			public IMonad<TB, Async> Return<TB> (TB val)
+			{
+				return new AsyncM<TB>(Task<TB>.FromResult(val));
+			}
+			//helper method two tasks composition
+			private static async Task<TB> BindTasks<TB> (Task<T> m, Func<T, Task<TB>> f)
+			{
+				var r = await m;
+				return await f(r);
+			}
+ 
+			public IMonad<TB, Async> Bind<TB> (Func<T, IMonad<TB, Async>> f)
+			{
+				return new AsyncM<TB>(BindTasks(this.Task, (t) => f(t).CastM<TB, AsyncM<TB>, Async>().Task));
+			}
+ 
+			#endregion
+ 
+			public AsyncM (Task<T> val)
+			{
+				Task = val;
+			}
+			public Task<T> Task {
+				get;
+				set;
+			}
+		}
+	}
+ 
+	public static class AsyncMonad
+	{
+		public static Func<Async.AsyncM<TB>> Lift<TB> (this Func<Task<TB>> f)
+			where TB : class
+		{
+			return () => {
+				var res =  f ();
+				return new Async.AsyncM<TB>(res);
+			};
+		}
+	}
+{% endhighlight %}
+Ну Check тип мы уже видели что работает, а как там насчет Async<T>?
+{% highlight csharp %}
+class MainClass
+	{
+		public static Task<String> GetData () 
+		{
+			return new WebClient().DownloadStringTaskAsync(new Uri("http://google.com"));
+		}
+ 
+		static void Main (string[] args)
+		{
+			var getData = AsyncMonad.Lift (GetData);
+			var res = 
+				from a in getData ()
+				from b in getData ()
+				select a.Substring(0,10) + b.Substring(10,20);
+			var task = res.CastM<string, Async.AsyncM<string>, Async> ().Task;
+			Console.WriteLine (task.Result);
+			Console.WriteLine ("finished!");
+			Console.ReadLine ();
+		}
+	}
+{% endhighlight %}
+Удивительно я бы сказал, но оно работает. Итак полиморфные монады у нас в кармане, теперь приступим к трансформерам. Итак есть тип Async<Check<T>> который является монадой Async над типом Check<T>, но нам бы хотелось его превратить в монаду Async<Check<_>> над типом T. Как это сделать? Все просто надо завернуть Async<Check<T>> в монаду над типом T. Допустим назовем этот тип трансформером и для Check монады назовем его CheckT. В конце концов мы получим конструкцию вида CheckT<Async<Check<T>>> этакий трехслойный бутерброд. Главная фишка что этот CheckT реализует интерфейс не IMonad над Async<Check<T>>> а Imonad над T. Еще раз повторим: CheckT это враппер для типов вида SomeOtherMonad<CheckMonad<T>> и функция Lift для CheckT будет преобразовывать функции возвращающие SomeMonad<T> в функции возвращающие CheckT<SomeOtherMonad<CheckMonad<T>>>. В функции return в начале он будет звертывать значение в тип Check а потом его передавать методу return класа SomeOtherMonad и навыходе кастить его в себя. В Bind поведение чуть сложнее и вся магия происходит там но суть таже. Наверное это сложнее описать словами чем кодом. Чтож давайте реализуем CheckT. Я для облегчения понимания решил разделить определение типов CheckedVal это просто тип контейнер. Check.CheckM это монада над CheckedVal и
+CheckForT<TMI>.CheckT<T> это трансформер над CheckedVal. Хотя такое разделение излишне и тип CheckedVal должен быть включен в тип Check.CheckM.
+Особое внимание в коде надо обратить на функцию bind и место где описан маркер обертываемой монады TMI. Он определен в типе маркере трансформера CheckForT<TMI>.CheckT<T>, а не в типе трансформера CheckForT.CheckT<T,TMI>. Это сделано для того чтобы при реалзации методо интерфейса монады, у нас не терялся тип обернутой монады. Так мы застраховались от выхова bind на функциях которые возвращают разные обернутые и трансформированные монады. Это вызвало бы ошибку в рантайм. Итак вся магия здесь.
+{% highlight csharp %}
+	public class CheckForT<TMI>
+	{
+		CheckForT ()
+		{
+ 
+		}
+ 
+		public class CheckT<T>: CheckForT<TMI>, IMonad<T, CheckForT<TMI>>
+		{
+			#region IMonad implementation
+ 
+			public IMonad<TB, CheckForT<TMI>> Return<TB> (TB val)
+			{
+				return new CheckT<TB> (Value.Return<CheckedVal<TB>> (CheckedVal<TB>.Success (val)));
+			}
+ 
+			private IMonad<CheckedVal<TB>,TMI> BindInternal<TB> (CheckedVal<T> check, 
+			                                                     Func<T, IMonad<TB, CheckForT<TMI>>> f)
+			{
+				return check.IsFailed 
+					? Value.Return<CheckedVal<TB>> (CheckedVal<TB>.Fail ()) 
+						: f (check.Value).CastM<TB, CheckT<TB>,CheckForT<TMI>> ().Value;
+			}
+ 
+			public IMonad<TB, CheckForT<TMI>> Bind<TB> (Func<T, IMonad<TB, CheckForT<TMI>>> f)
+			{
+				var tmp = Value.Bind<CheckedVal<TB>> (check => BindInternal (check, f));
+				return new CheckT<TB> (tmp);
+			}
+ 
+			#endregion
+ 
+			public CheckT (IMonad<CheckedVal<T>,TMI> val)
+			{
+				Value = val;
+			}
+ 
+			public IMonad<CheckedVal<T>,TMI> Value {
+				get;
+				private set;
+			}
+		}
+	}
+ 
+	public static class CheckMonad
+	{
+		public static Func<Check.CheckM<TB>> Lift<TB> (this Func<TB> f)
+			where TB : class
+		{
+			return () => {
+				var res = f ();
+				return new Check.CheckM<TB> (CheckedVal<TB>.ToCheck (res));
+			};
+		}
+ 
+		public static Func<Check.CheckM<TB>> Lift<TB> (this Func<CheckedVal<TB>> f)
+			where TB : class
+		{
+			return () => {
+				var res = f ();
+				return new Check.CheckM<TB> (res);
+			};
+		}
+ 
+		public static Func<CheckForT<TMI>.CheckT<TB>> LiftT<TB,TMI> (this Func<IMonad<TB,TMI>> f)
+			where TB : class
+		{
+			Func<IMonad<CheckedVal<TB>,TMI>> checkF = () => {
+				var m = f ();
+				return m.Bind (val => m.Return (CheckedVal<TB>.ToCheck (val)));
+			};
+ 
+			return () => {
+				var monad = checkF ();
+				return new CheckForT<TMI>.CheckT<TB> (monad);
+			};
+		}
+	}
+{% endhighlight %}
+Ну что пора показать заказчику рабочий код для Async<CheckedValue> монады.
+{% highlight csharp %}
+		public static Task<String> GetData ()
+		{
+			//return Task<String>.FromResult ((string)null);//for check tests
+			return new WebClient ().DownloadStringTaskAsync (new Uri ("http://google.com"));
+		}
+ 
+		static void Main (string[] args)
+		{
+			//expected Check<Test> but Check<Check<Test>>
+			var getData = CheckMonad.LiftT (AsyncMonad.Lift (GetData));
+			var res = 
+				from a in getData ()
+				from b in getData ()
+				select a.Substring (0, 10) + b.Substring (10, 20);
+			var checkT = res.CastM<string, CheckForT<Async>.CheckT<string>, CheckForT<Async> > ();
+			var task = checkT.Value.CastM<CheckedVal<string>, Async.AsyncM<CheckedVal<string>>, Async> ().Task;
+			Console.WriteLine (task.Result);
+			Console.WriteLine ("finished!");
+			Console.ReadLine ();
+		}
+{% endhighlight %}
+Опять работает. Ну добились того о чем просили коммунисты 20 века мы скомпозили 2 монады. Причем одна из них была просто оболчкой над существующим классом Task. Я надеюсь материал был не шибко запутан и мой стиль подачи вас не напугал. В следующей часте будет интересней посмотрим на отличия computation expressions от монад, обнаружим что монады являются тюринг полными. и обсудим возможности их применения в областе определения семантики для монадического синтаксиса. 
+P.S. Это реализация полиморфного computation expression DO для fsharp чтобы теперь можно было писать как в Хаскелл.
+{% highlight fsharp %}
 
 {% endhighlight %}
+
+
+{% highlight csharp %}
+
+{% endhighlight %}
+
+
 {% highlight csharp %}
 
 {% endhighlight %}
