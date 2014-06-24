@@ -445,19 +445,160 @@ public class Check3<T>
 				from b in getData ()
 				select a.Substring (0, 10) + b.Substring (10, 20);
 {% endhighlight %}
-Очень круто но есть проблема с композицией монад. Допестим хотелось бы нам работать с функциями которые возвращают Async<Check<T>> с нашим красивым синтацсисом. Однако наши фунции Bind в типе Async ничего не знают о вложенном типе Check поэтому наш красивый код работать не будет наша функция bind развернет нам только async и вернет Сheck<T> вместо T. Вот тут в дело вступают монад трансформеры. Что такое монад трансформер? это по сути штука которая беря на воход ему неизвестную монаду добавляет к ней функциональность другой и в результате получаем комбинированную монаду. Допустим в нашем случае к монадам Async<T> и Check<T> которые мы не можем использовать вместе мы можем написать монад трансформеры AsyncT<T,ParantMonad> и CheckT<T, ParentMonad> и для нашего случая Async<Check<T>> мы спокойно можем сделать что то типа такого:
+Очень круто но есть проблема с композицией монад. Допестим хотелось бы нам работать с функциями которые возвращают Async<Check<T>> с нашим красивым синтаксисом. Однако наши фунции Bind в типе Async ничего не знают о вложенном типе Check поэтому наш красивый код работать не будет наша функция bind развернет только async и вернет Сheck<T> вместо T. Вот тут в дело вступают монад трансформеры. Что такое монад трансформер? это по сути штука которая беря на вход неизвестную монаду добавляет к ней функциональность известной и в результате получаем комбинированную монаду. Допустим в нашем случае к монадам Async<T> и Check<T> которые мы не можем использовать вместе мы можем написать монад трансформеры AsyncT<T,ParantMonad> и CheckT<T, ParentMonad> и для нашего случая Async<Check<T>> мы спокойно можем сделать что то типа такого:
 {% highlight csharp %}
-
+var getData = CheckT<T, Async<T>>.LiftT (AsyncMonad.Lift (GetData));
+			var res = 
+				from a in getData ()
+				from b in getData ()
+				select a.Substring (0, 10) + b.Substring (10, 20);
 {% endhighlight %}
+Обычно все туториалы в этом месте оканчиваются словами о том что подбные штуки есть в Хаскелл и Скала, но в C# нету higher kinded types и тут их реализовать невозможно. Занавес.
+Но мы то прожженные SharePoin энтерпрайз разработчики мы не знаем слов любви и жалости. Заказчику НАДО значит надо. Ок давайте посмотрим на эту проблему поближе. Мы разберем типичный пример. На самом деле он не показателен так как эту проблему можно обойти несколькими способами но мы решим ее механизмом который позволит в дальнейшем решить проблему трансформеров. Итак есть интерфейс:
 {% highlight csharp %}
-
+	interface IFunctor<T> {
+		T<B> FMap<A, B>(Func<A, B> f, T<A> a);
+	}
 {% endhighlight %}
+На первый взгляд ничего подозрительного, у нас есть контейнерный тип и далее мы определяем сигнатуру требуемого метода который применяет функцию над типом A к завернутому в T типу A и оборачивает результат функции типа B в контейнерный тип T. Все хорошо за искоючением того что в c# нельзя задать подобный тип T. Как видно из кода тип T является генериком T<_> и тут то начинются проблемы. Я не буду обьяснять суть проблемы тут вам проще взять и скопировать определение функтора данные выше и попробовать решить проблему самим. Это отличная головолмка. И сразу становиться все ясно.
+Попроовали? Решили? Отлично. Теперь решим вместе.
+В чем суть типа T в нашем интерфейсе? Зачем он нужен а нужен он для того чтобы пометить входящий и выходящий контейнеры одним маркером и наложить ограничение на то что они должны быть одним и темже генерик типом. Чтобы не получилось что на входе List<A> а на выходе Check<B>. Ок задача ясна пометить генерик типа негенерик типом. Как сделать? Да просто:
 {% highlight csharp %}
-
+	public abstract class Wrapper
+	{
+		private Wrapper ()
+		{
+			
+		}
+ 
+		public class WrapperImpl<T> : Wrapper
+		{
+		}
+	}
 {% endhighlight %}
+Хм интересно. Давайте подумаем какие гарантию нам это дает. То что инстанс типа Wrapper всегда будет инстансом типа WrapperImpl единственное в чем надо быть уверенными так это в том что при апкасте мы не промажем с типом сдержащимся в WrapperImpl. Давайте введем специальный тип контейнер для информации о генерик типе и немного перепишем определение враппер типа. 
 {% highlight csharp %}
+	public interface IGeneric<T, TCONTAINER>
+	{
+ 
+	}
+	public class Wrapper{
+		public class WrapperImpl<T> : Wrapper, IGeneric<T, Wrapper>
+		{
 
+		}
+	}
 {% endhighlight %}
+Ну и теперь добавить безопасный хелпер метод для кастов.
+{% highlight csharp %}
+public static class GenericExts
+	{
+		public static TM UpCast<T, TM, TMB> (this IGeneric<T, TMB> m)
+			where TM : IGeneric<T, TMB>
+		{
+			return (TM)m;//safe for single inheritance
+		}
+ 
+		public static IGeneric<T, TMB> DownCast<T, TM, TMB> (this TM m)
+			where TM : IGeneric<T, TMB>
+		{
+			return (TM)m;//safe for single inheritance
+		}
+	}
+{% endhighlight %}
+Ну и с учетом выше написанного перепишем определение интерфейса для функтора
+{% highlight csharp %}
+public interface IFunctor<T>
+	{
+		CB FMap<A, B, CA, CB> (Func<A, B> f, CA a)
+			where CA : IGeneric<A, T>
+			where CB : IGeneric<B, T>;
+	}
+{% endhighlight %}
+Вуаля ловкость пальцев и никакого обмана. Единственное условие это следовать петтерну одиночного наследника, чтобы одним маркером нельзя было маркировать несколько классов. Давайте соберем все вместе и посмотрим работает ли.
+{% highlight csharp %}
+	//	interface IFunctor<T<_>> {
+	//		T<B> FMap<A, B>(Func<A, B> f, T<A> a);
+	//	}
+	public interface IGeneric<T, TCONTAINER>
+	{
+ 
+	}
+ 
+	public static class GenericExts
+	{
+		public static TM UpCast<T, TM, TMB> (this IGeneric<T, TMB> m)
+			where TM : IGeneric<T, TMB>
+		{
+			return (TM)m;//safe for single inheritance
+		}
+ 
+		public static IGeneric<T, TMB> DownCast<T, TM, TMB> (this TM m)
+			where TM : IGeneric<T, TMB>
+		{
+			return (TM)m;//safe for single inheritance
+		}
+	}
+ 
+	public interface IFunctor<T>
+	{
+		CB FMap<A, B, CA, CB> (Func<A, B> f, CA a)
+			where CA : IGeneric<A, T>
+			where CB : IGeneric<B, T>;
+	}
+ 
+	public interface IFunctorSelf<TGENERIC, TSELF, TVALUE>
+		where TSELF : IGeneric<TVALUE, TGENERIC>
+	{
+		CB FMap<B, CB> (Func<TVALUE, B> f)
+			where CB : IGeneric<B, TGENERIC>;
+	}
+ 
+	public abstract class Wrapper
+	{
+		private Wrapper ()
+		{
+			
+		}
+ 
+		public class WrapperImpl<T> : Wrapper, IGeneric<T, Wrapper>, IFunctorSelf<Wrapper, WrapperImpl<T> , T>
+		{
+			#region IFunctorSelf implementation
+ 
+			public CB FMap<B, CB> (Func<T, B> f) where CB : IGeneric<B, Wrapper>
+			{
+				var res = new WrapperImpl<B> (f (Value));
+				return res.Cast<B, CB,Wrapper> ();
+			}
+ 
+			#endregion
+ 
+			public WrapperImpl (T val)
+			{
+				Value = val;
+			}
+ 
+			public T Value {
+				get;
+				set;
+			}
+ 
+ 
+		}
+	}
+	class MainClass
+	{
+		public static void Main (string[] args)
+		{
+			var a = new Wrapper.WrapperImpl<int> (1);
+			var b = a.FMap<int, Wrapper.WrapperImpl<int>> (x => -x);
+			Console.WriteLine ("Value is: " + b.Value);
+			Console.ReadLine ();
+		}
+	}
+{% endhighlight %}
+Ура. Мы сорвали джек пот, пора просить добавку к зарплате у начальства.
+Теперь у нас есть все чтобы для начала определить интерфейс для монад и наслждаться полиморфным кодом над монадами и получить возможность их композиции.
 {% highlight csharp %}
 
 {% endhighlight %}
