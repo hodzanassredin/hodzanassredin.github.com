@@ -1,7 +1,7 @@
 ---
 published: true
 layout: post
-title: Monads and monad transformers for mere mortals in pure C#.
+title: Monads and monad transformers for mere mortals in pure C#. DRAFT 
 tags : [lessons, csharp, monad]
 ---
 
@@ -334,7 +334,7 @@ public static void DefesiveCompare (string[] args)
 	Console.WriteLine ("finished!");
 }
 {% endhighlight %}
-Awesome. It works as expected. So what do we have? Wrapper type Check over any type T. Two functions Defend and Return. And this is all what we need to write some defensive code without a lot of null checks. But we can write some other wrapper type and define functions Return and Defend over it with different functionality in function Defend. It will allow us to use the same code but now with different effect. For example instead of check we can implement async effect(and we do that later). This pattern is well known as monad and have a lot more possibilities to do, but instead of using Defend name for composion function usually used Bind name.  One minor problem that our consuming code looks not very beatiful in terms of wrapped functions and we as imperative developers prefere simple line by line code. Fortunately for us some solutions are already here. In some programming languages we have support for syntaxis sugar over monads: linq expressions in c#, do notation in Haskell and computation expressions in fsharp. Computation expressions is not only for monad syntax but we will discuss it in next posts. Lets try to adopt our code to linq expressions, we should implement extension function SelectMany for our wrapper type. 
+Awesome. It works as expected. So what do we have? Wrapper type Check over any type T. Two functions Defend and Return. And this is all what we need to write some defensive code without a lot of null checks. But we can write some other wrapper type and define functions Return and Defend over it with different functionality in function Defend. It will allow us to use the same code but now with different effect. For example instead of check we can implement async effect(and we do that later). This pattern is well known as monad and have a lot more possibilities to do, but instead of using Defend name for composion function usually used Bind name.  One minor problem that our consuming code looks not very beatiful in terms of wrapped functions and we as imperative developers prefere simple line by line code. Fortunately for us some solutions are already here. In some programming languages we have support for syntatic sugar over monads: linq expressions in c#, do notation in Haskell and computation expressions in fsharp. Computation expressions is not only for monad syntax but we will discuss it in next posts. Lets try to adopt our code to linq expressions, we should implement extension function SelectMany for our wrapper type. 
 {% highlight csharp %}
 public class Check<T>
 {
@@ -466,9 +466,7 @@ interface IFunctor<T> {
 	T<B> FMap<A, B>(Func<A, B> f, T<A> a);
 }
 {% endhighlight %}
-На первый взгляд ничего подозрительного, у нас есть контейнерный тип и далее мы определяем сигнатуру требуемого метода который применяет функцию над типом A к завернутому в T типу A и оборачивает результат функции типа B в контейнерный тип T. Все хорошо за искоючением того что в c# нельзя задать подобный тип T. Как видно из кода тип T является генериком T<_> и тут то собака и порылась. Я не буду обьяснять суть проблемы, тут проще взять и скопировать определение функтора данное выше и попробовать решить проблему самим в ide. Это отличная головолмка. И сразу становиться все ясно.
-Попроовали? Решили? Отлично. Можете дальше не читать. Теперь решим вместе.
-В чем суть типа T в нашем интерфейсе? Зачем он нужен, а нужен он для того чтобы пометить входящий и выходящий контейнеры одним маркером и наложить ограничение на то, что они должны быть одним и темже генерик типом. Чтобы не получилось что на входе List<AType>, а на выходе Check<BType>. Ок задача ясна пометить генерик тип негенерик типом. Как сделать? Да просто:
+Nothing special is here, it describes a function which takes a wrapped into T unwraps it and applies function f to unwrapped value after that it wraps B result int T thats all. Everything is ok, but we can't write this code in C#. C# doesn't support using of type variable T as type constructor. I don't want to describe whole problem here and better way to understand this restriction is to copy interface defenition into IDE and play with it. It is a good puzzle. Lets try to anylyze that problem and solve it step by step. Why do we need type T here? We need it to add a constraint to input and output of FMap function. Whey should be the same wrapper type over different wrapped types. It guars us from incorrect implementations which takes Check<A> and returns List<T>. So we need to mark generic type by some other non generic typeHow can we do that. It is simple.
 {% highlight csharp %}
 public abstract class Wrapper
 {
@@ -482,7 +480,7 @@ public abstract class Wrapper
 	}
 }
 {% endhighlight %}
-Хм интересно. Давайте подумаем какую гарантию нам это дает. А дает оно нам гарантию того что инстанс типа Wrapper всегда будет инстансом типа WrapperImpl, единственное в чем надо быть уверенными так это в том что при апкасте мы не промажем с типом сдержащимся в WrapperImpl. Давайте введем специальный тип контейнер для информации о генерик типе и немного перепишем определение враппер типа. 
+Interesting. Lets think which guarantiee it gives to us. First of all we can be shure that instance of type Wrapper always be the instance of type WrapperImpl. But we need to keep wrapped type somewhere to do safe upcast. Lets introduce special type container which stores generic type marker with wrapped type. Also we ned to rewrite WrapperImple to support it.. 
 {% highlight csharp %}
 public interface IGeneric<T, TCONTAINER>
 {
@@ -495,7 +493,7 @@ public class Wrapper{
 	}
 }
 {% endhighlight %}
-Ну и теперь добавить безопасный хелпер метод для кастов.
+Now we can add helper method for upcasts.
 {% highlight csharp %}
 public static class GenericExts
 {
@@ -512,7 +510,7 @@ public static class GenericExts
 	}
 }
 {% endhighlight %}
-Ну и с учетом выше написанного перепишем определение интерфейса для функтора
+And now we can solve our Functor interface problem with type T.
 {% highlight csharp %}
 public interface IFunctor<T>
 {
@@ -521,7 +519,7 @@ public interface IFunctor<T>
 		where CB : IGeneric<B, T>;
 }
 {% endhighlight %}
-Вуаля, ловкость пальцев и никакого обмана. Единственное условие, это следовать петтерну одиночного наследника, чтобы одним маркером нельзя было маркировать несколько классов. Давайте соберем все вместе и посмотрим работает ли.
+Bingo. One restriction is to follow single inheritance pattern when describing our container classes. Lets try to use out Functor interface in some csharp's idiomatic way.
 {% highlight csharp %}
 //	interface IFunctor<T<_>> {
 //		T<B> FMap<A, B>(Func<A, B> f, T<A> a);
@@ -606,8 +604,7 @@ class MainClass
 	}
 }
 {% endhighlight %}
-Ура. Мы сорвали джек пот, пора просить добавку к зарплате у начальства.
-Теперь у нас есть все, чтобы для начала определить интерфейс для монад и наслждаться полиморфным кодом над ними, а также получить возможность их композиции.
+Yahoo. Now we have everything to implement IMonad interface and later build monad transformers on top of it. 
 {% highlight csharp %}
 public interface IMonad<T, TMI>
 {
@@ -632,7 +629,7 @@ public static class MonadSyntax
 	}
 }
 {% endhighlight %}
-На данный момент в коде должно быть все понятно, мы взяли идею из функтора применили к интерефейсу для монад, который содержит определение методов bind и return. Теперь мы можем переписать Check монаду на основе этого интерфейса и реализовать Async монаду. Async монада может послужить примером того как можно сделать монадическую обертку над существующим генерик типом, который не имплементирует интерфейс монады. В нашем случае Async<T> это просто обертка над типом Task<T> и можно думать, что это адаптер типа Task к монадическому интерфейсу.
+Now it shoulb be clear what is going on here. We took our workaround for functor interface and applied it to our IManad interface. Now we can rewrite our Check monad and adopt it to out IMonad interface. Also now we can implement Async monad. Async monad implementation can be used as an example how to adapt some existing type to monadic interface. In our case we will build Async monad on top of Task<T> type.
 {% highlight csharp %}
 public class Check
 {
@@ -761,7 +758,7 @@ public static class AsyncMonad
 	}
 }
 {% endhighlight %}
-Ну Check тип мы уже видели что работает, а как там насчет Async<T>?
+Ok Check monad works but what about Async<T>?
 {% highlight csharp %}
 class MainClass
 {
@@ -786,9 +783,7 @@ class MainClass
 	}
 }
 {% endhighlight %}
-Удивительно я бы сказал, но оно работает. Итак полиморфные монады у нас в кармане, теперь приступим к трансформерам. Итак есть тип Async<Check<T>> который является монадой Async над типом Check<T>, но нам бы хотелось его превратить в монаду Async<Check<_>> над типом T. Как это сделать? Все просто надо завернуть Async<Check<T>> в монаду над типом T. Допустим назовем этот тип трансформером и для Check монады назовем его CheckT. В конце концов мы получим конструкцию вида CheckT<Async<Check<T>>> этакий трехслойный бутерброд. Главная фишка что этот CheckT реализует интерфейс не IMonad над Async<Check<T>>>, а Imonad над T. Еще раз повторим: CheckT это враппер для типов вида SomeOtherMonad<CheckMonad<T>> и функция Lift для CheckT будет преобразовывать функции возвращающие SomeMonad<T> в функции возвращающие CheckT<SomeOtherMonad<CheckMonad<T>>>. В функции return он будет завертывать значение в тип Check, а потом его передавать методу return класа SomeOtherMonad и на выходе кастить в себя. В Bind поведение чуть сложнее и вся магия происходит там, но суть таже. Наверное это сложнее описать словами чем кодом. Чтож давайте реализуем CheckT. Я для облегчения понимания решил разделить определение типов CheckedVal это просто тип контейнер. Check.CheckM это монада над CheckedVal и
-CheckForT<TMI>.CheckT<T> это трансформер над CheckedVal. Хотя такое разделение излишне и тип CheckedVal должен быть включен в тип Check.CheckM.
-Особое внимание в коде надо обратить на функцию bind и место где описан маркер обертываемой монады TMI. Он определен в типе маркере трансформера CheckForT<TMI>.CheckT<T>, а не в типе трансформера CheckForT.CheckT<T,TMI>. Это сделано для того чтобы при реалзации методов интерфейса монады, у нас не терялся тип обернутой монады. Так мы застраховались от выхова bind на функциях которые возвращают разные обернутые и трансформированные в CheckT монады. Это вызвало бы ошибку в рантайм. Итак вся магия здесь.
+It works as expected. So we have polymorphic monads. Now lets build some transformer. We have type Async<Check<T>> which is a Async monad over type Check<T>, but we want to convert it into monad Async<Check<_>> over type T. How to do that? We need to wrap Async<Check<T>> into monad over type T. Lets name it as CheckT transformer for Check monad. At the end we will have type laki this CheckT<Async<Check<T>>> very similar to sliced bread. Main thing is that CheckT implements interface IMonad over T and not over Async<Check<T>>>. Repeat one more time: CheckT is a wrapper for type like SomeOtherMonad<CheckMonad<T>> and Lift function for CheckT convert functions which returns SomeMonad<CheckMonad<T>> into functions which returns CheckT<SomeOtherMonad<CheckMonad<T>>>. In Return function it will wrap value into the Check type, and after that will use return function of other monad to wrap it one more time and cast result to type CheckT. Bind function is a little bit harder to understand but logic are the same. So lets implemet type CheckT. For better understanding I separated Check types into: container CheckedVal<T>, monad adapter CheckM for type CheckedVal<T> and monad transformer CheckT for type CheckedVal<T>. Check.CheckM. This separation is artifical and you can merge CheckedVal<T> and CheckM into the single one. Most atention should be paid to where we put intenal monad marker in type CheckT. It is defined in parent type CheckForT<TMI>.CheckT<T>, but not in generic type CheckForT.CheckT<T,TMI>. This constraints our IMonad functions to use the same internal monad marker everywhere. And it is similar to partial type construction. So magic lives here:
 {% highlight csharp %}
 public class CheckForT<TMI>
 {
@@ -879,7 +874,7 @@ public static class CheckMonad
 	}
 }
 {% endhighlight %}
-Ну что пора показать заказчику рабочий код для Async<CheckedValue> монады.
+And now we are ready to implement code for Async<CheckedValue> monad.
 {% highlight csharp %}
 public static Task<String> GetData ()
 {
@@ -910,4 +905,4 @@ static void Main (string[] args)
 	Console.ReadLine ();
 }
 {% endhighlight %}
-Полный код [здесь](https://gist.github.com/ hodzanassredin/28c4208206d9d88908f5 "полный код"). Опять работает. Ну мы добились того о чем грезили все генетики последние годы, мы скрестили ужа с ежом. Причем одна из монад была просто оболчкой над существующим классом Task. В коде видно как неудобно разворачивать завернутиые в кучу оберток типы, но это можно исправить перенеся финальный код в синтаксис монады или создав хелпер методы. Я надеюсь материал был не шибко запутан и мой стиль подачи вас не напугал. В следующей часте будет интересней: посмотрим на отличия computation expressions от монад, обнаружим что монады являются тюринг полными и обсудим возможности их применения в области определения семантики для монадического синтаксиса. 
+Full code [here](https://gist.github.com/ hodzanassredin/28c4208206d9d88908f5 "code"). So we composed two monads into single one. This is real benefit for us now we can write generic code which is polymorphic for different monad types. And one of the monads was just a wrapper over existing type Task<T>. It is clear that we have problems now whith result unwrapping but it can be avoided by moving final code into the monad syntax or by creating helper methods like runAsync. I hope this post was helpfull for you and now you will be able to read articles about interesting problem solutions like parsing described in therms of monads. In the next chapters we will look at the differences between computation expressions and monads, will find that monads are turing complete and discuss possibilities of monad application for real world problems and defining different semantics for monadic syntax. 
