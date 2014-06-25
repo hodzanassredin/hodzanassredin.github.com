@@ -601,7 +601,7 @@ public interface IMonad<T, TMI>
 }
 public static class MonadSyntax
 {
-	public static TM Cast<T, TM, TMB> (this IMonad<T, TMB> m)
+	public static TM UpCast<T, TM, TMB> (this IMonad<T, TMB> m)
 		where TM : TMB, IMonad<T, TMB>
 	{
 		return (TM)m;//safe for single inheritance
@@ -717,7 +717,7 @@ public class Async
 		public IMonad<TB, Async> Bind<TB> (Func<T, IMonad<TB, Async>> f)
 		{
 			return new AsyncM<TB>(BindTasks(this.Task, 
-				(t) => f(t).CastM<TB, AsyncM<TB>, 
+				(t) => f(t).UpCast<TB, AsyncM<TB>, 
 				Async>().Task));
 		}
 
@@ -764,7 +764,7 @@ class MainClass
 			from a in getData ()
 			from b in getData ()
 			select a.Substring(0,10) + b.Substring(10,20);
-		var task = res.CastM<string, Async.AsyncM<string>, Async> ().Task;
+		var task = res.UpCast<string, Async.AsyncM<string>, Async> ().Task;
 		Console.WriteLine (task.Result);
 		Console.WriteLine ("finished!");
 		Console.ReadLine ();
@@ -799,7 +799,7 @@ public class CheckForT<TMI>
 		{
 			return check.IsFailed 
 				? Value.Return<CheckedVal<TB>> (CheckedVal<TB>.Fail ()) 
-				: f (check.Value).CastM<TB, CheckT<TB>,CheckForT<TMI>> ().Value;
+				: f (check.Value).UpCast<TB, CheckT<TB>,CheckForT<TMI>> ().Value;
 		}
 
 		public IMonad<TB, CheckForT<TMI>> Bind<TB> (
@@ -879,11 +879,11 @@ static void Main (string[] args)
 		from a in getData ()
 		from b in getData ()
 		select a.Substring (0, 10) + b.Substring (10, 20);
-	var checkT = res.CastM<string, CheckForT<Async>
+	var checkT = res.UpCast<string, CheckForT<Async>
 					.CheckT<string>, CheckForT<Async> > ();
 	var task = checkT
 					.Value
-					.CastM<	CheckedVal<string>, 
+					.UpCast<	CheckedVal<string>, 
 							Async.AsyncM<CheckedVal<string>>,
 							Async> ()
 					.Task;
