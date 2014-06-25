@@ -125,7 +125,8 @@ class Test
 
 }
 public static void Test(){
-	Defend2(new Test(), a=>a.Text());// System.Object does not contain a defenition for Text
+	Defend2(new Test(), a=>a.Text());
+	// System.Object does not contain a defenition for Text
 }
 {% endhighlight %}
 Попробуем обойти эту проблемы с помощью переменных типа. 
@@ -224,7 +225,10 @@ public class Check2<T>
 
 	public override string ToString ()
 	{
-		return string.Format ("[Check: IsFailed={0}, Value={2}]", IsFailed, Value);
+		return string.Format (
+			"[Check: IsFailed={0}, Value={2}]", 
+			IsFailed, 
+			Value);
 	}
 }
 
@@ -288,7 +292,10 @@ public class Check3<T>
 
 	public override string ToString ()
 	{
-		return string.Format ("[Check: IsFailed={0}, Value={1}]", IsFailed, Value);
+		return string.Format (
+			"[Check: IsFailed={0}, Value={1}]", 
+			IsFailed, 
+			Value);
 	}
 }
 
@@ -355,7 +362,10 @@ public class Check<T>
 
 	public override string ToString ()
 	{
-		return string.Format ("[Check: IsFailed={0}, Value={1}]", IsFailed, Value);
+		return string.Format (
+			"[Check: IsFailed={0}, Value={1}]", 
+			IsFailed, 
+			Value);
 	}
 }
 
@@ -366,7 +376,7 @@ public static class CheckMonad
 		return Check<T>.Success (value);
 	}
 
-	public static Check<U> Bind<T, U> (this Check<T> m, Func<T, Check<U>> k) //bind
+	public static Check<U> Bind<T, U> (this Check<T> m, Func<T, Check<U>> k)
 	{
 		return m.IsFailed ? Check<U>.Fail () : k (m.Value);
 	}
