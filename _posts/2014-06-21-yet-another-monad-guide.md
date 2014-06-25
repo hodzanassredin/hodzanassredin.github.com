@@ -452,7 +452,7 @@ var res =
 	from b in getData ()
 	select a.Substring (0, 10) + b.Substring (10, 20);
 {% endhighlight %}
-Very cool, but there is a problem with the composition of monads. We would use the same code with functions that return Async<Check <T>>. However, our code in the Bind function of the type Async knows nothing about nested type Check, so our code will not work, our bind function unwraps only Async and returns Check <T> instead of T. Here monads transformers come into play. What is a monad transformer? This is a sort of thing which is taking an unknown monad as input, adds some functionality of other monad and returns a combined monad. Suppose in our case with monads Async<T> and Check<T> which could not be used together, we can write monads transformers AsyncT<T,ParentMonad> and CheckT<T, ParentMonad>.For our case Async<Check<T>> we can safely do something like this:
+Very cool, but there is a problem with the composition of monads. We would use the same code with functions that return Async< Check < T > >. However, our code in the Bind function of the type Async knows nothing about nested type Check, so our code will not work, our bind function unwraps only Async and returns Check <T> instead of T. Here monads transformers come into play. What is a monad transformer? This is a sort of thing which is taking an unknown monad as input, adds some functionality of other monad and returns a combined monad. Suppose in our case with monads Async<T> and Check<T> which could not be used together, we can write monads transformers AsyncT<T,ParentMonad> and CheckT<T, ParentMonad>.For our case Async<Check<T>> we can safely do something like this:
 {% highlight csharp %}
 var getData = CheckT<T, Async<T>>.LiftT (AsyncMonad.Lift (GetData));
 var res = 
