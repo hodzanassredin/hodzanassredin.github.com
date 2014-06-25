@@ -685,7 +685,10 @@ public class Check
 
 		public override string ToString ()
 		{
-			return string.Format ("[Check: IsFailed={0}, Value={1}]", IsFailed, Value);
+			return string.Format (
+				"[Check: IsFailed={0}, Value={1}]", 
+				IsFailed, 
+				Value);
 		}
 	}
 }
@@ -817,9 +820,12 @@ public class CheckForT<TMI>
 				: f (check.Value).CastM<TB, CheckT<TB>,CheckForT<TMI>> ().Value;
 		}
 
-		public IMonad<TB, CheckForT<TMI>> Bind<TB> (Func<T, IMonad<TB, CheckForT<TMI>>> f)
+		public IMonad<TB, CheckForT<TMI>> Bind<TB> (
+			Func<T, IMonad<TB, CheckForT<TMI>>> f)
 		{
-			var tmp = Value.Bind<CheckedVal<TB>> (check => BindInternal (check, f));
+			var tmp = Value.Bind<CheckedVal<TB>> (
+				check => BindInternal (check, f)
+			);
 			return new CheckT<TB> (tmp);
 		}
 
@@ -857,7 +863,8 @@ public static class CheckMonad
 		};
 	}
 
-	public static Func<CheckForT<TMI>.CheckT<TB>> LiftT<TB,TMI> (this Func<IMonad<TB,TMI>> f)
+	public static Func<CheckForT<TMI>.CheckT<TB>> LiftT<TB,TMI> (
+		this Func<IMonad<TB,TMI>> f)
 		where TB : class
 	{
 		Func<IMonad<CheckedVal<TB>,TMI>> checkF = () => {
@@ -877,7 +884,9 @@ public static class CheckMonad
 public static Task<String> GetData ()
 {
 	//return Task<String>.FromResult ((string)null);//for check tests
-	return new WebClient ().DownloadStringTaskAsync (new Uri ("http://google.com"));
+	return new WebClient ().DownloadStringTaskAsync (
+		new Uri ("http://google.com")
+	);
 }
 
 static void Main (string[] args)
@@ -888,8 +897,12 @@ static void Main (string[] args)
 		from a in getData ()
 		from b in getData ()
 		select a.Substring (0, 10) + b.Substring (10, 20);
-	var checkT = res.CastM<string, CheckForT<Async>.CheckT<string>, CheckForT<Async> > ();
-	var task = checkT.Value.CastM<CheckedVal<string>, Async.AsyncM<CheckedVal<string>>, Async> ().Task;
+	var checkT = res.CastM<string, CheckForT<Async>
+					.CheckT<string>, CheckForT<Async> > ();
+	var task = checkT
+					.Value
+					.CastM<CheckedVal<string>, Async.AsyncM<CheckedVal<string>>, Async> ()
+					.Task;
 	Console.WriteLine (task.Result);
 	Console.WriteLine ("finished!");
 	Console.ReadLine ();
