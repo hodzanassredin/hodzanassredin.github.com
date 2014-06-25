@@ -9,9 +9,9 @@ tags : [lessons, csharp, monad]
 
 <p class="meta">25 June 2014 &#8211; Karelia</p>
 
-В процессе переноса небольшого проекта на fsharp, я задумался на тему использования монад на практике. Тема меня достаточно увлекла и я решел описать свой опыт в паре другой постов. К сожалению весь материал требовал неплохих знаний о монадах и монад трансформерах, в тоже время материал хотелось сделать цельным, самодосточным, без кучи слов и простым для обычных программистов не обремененных знанием математики и синтаксиса функциональных языков программирования. Так родилась идея написать еще одно обьяснение что же такое монады. Так как пост ориентирован на программистов, то и будем подходить не со стороны обьяснений или математики, а со стороны кода. Готовы? Поехали.
+During migration of a small project to fsharp, I thought a lot about using monads in practice. Subject fascinated me enough and I decided to describe my experience in a couple of posts. Unfortunately all the material demanded decent knowledge of monads and monad transformers, at the same time I wanted to make a material without any links to external materials, without a lot of words and simple for ordinary programmers who are not burdened by the knowledge of mathematics and functional programming language syntax. Thus was born the idea to write another explanation of what is a monad. Since this post is aimed at programmers, and it will be approached by code and not by the text or mathematics. Ready? Lets go.
 
-Давайте рассмотрим простой код:
+Lets look at some simple code:
 
 {% highlight csharp %}
 public static bool Bool ()
@@ -38,8 +38,7 @@ public static void Compare (string[] args)
 
 {% endhighlight %}
 
-Функция GetData имитирует запрос к источнику данных и случайным образом возвращает null или значение. Функция Compare использует функцию GetData для получения двух значений, сравнивает их между собой и пишет ответ на консоль.
-Что мы как ответственные программисты хотим добавить в этот код первым делом? Правильно, проверку на null в стиле defensive programming.
+GetData function imitates a query to a data source and randomly returns instance of required data type or null. Compare function uses GetData for retrieving two values, compares them and writes output to console. What we as a good programmers should fix at first in this sample? Right, we should add null checks and use style of defensive programming.
 
 {% highlight csharp %}
 public static void DefesiveCompare (string[] args)
@@ -63,7 +62,7 @@ public static void DefesiveCompare (string[] args)
 
 {% endhighlight %}
 
-Да программа стала безопасней но видно повторяющийся код. Берем на вооружение DRY принцип и убираем повторы.
+Ok code now looks more safe but we have repeated code lets remove it to support DRY principle.
 
 {% highlight csharp %}
 public static bool Defend (object o)
@@ -91,7 +90,7 @@ public static void DefesiveCompareDry (string[] args)
 }
 {% endhighlight %}
 
-Стало немного лучше, но все равно после каждого выхова надо добавлять проверку if. Давайте попробуем убрать управление потоком исполнения в функцию Defend.
+Looks better, but anyway we must add if check for every GetData invocation. Lets try to move if check into Defend function.
 
 {% highlight csharp %}
 public static string Defend (object a, Func<object, string> f)
@@ -110,7 +109,7 @@ public static void DefesiveCompareDry2 (string[] args)
 }
 {% endhighlight %}
 
-Выглядит замечательно, но есть проблема в том, что если мы будем использовать как значение например тип Test, то информация о нем пропадет и мы не сможем использовать его свойства и методы.
+Just perfect but we have a problem in case of using some other type for example class Test. During execution it will be downcasted to Syste.Object and we will not be able to use its members.
 
 {% highlight csharp %}
 class Test
@@ -129,7 +128,7 @@ public static void Test(){
 	// System.Object does not contain a defenition for Text
 }
 {% endhighlight %}
-Попробуем обойти эту проблемы с помощью переменных типа. 
+We can avoid this problem with generic parameters. 
 {% highlight csharp %}
 public static T Defend2Generic<T> (T a, Func<T, T> f)
 	where T: class//applied only for TA which can be null
@@ -137,7 +136,7 @@ public static T Defend2Generic<T> (T a, Func<T, T> f)
 	return a == null ? "Can't compare" : f (a);
 }
 {% endhighlight %}
-Хм новая ошибка, дело в том, что мы пытаемся вернуть строку вместо типа Test. Что делать? А давайте создадим тип Check<T> который будет содежрать или значение или строку с ошибкой.
+New problem.  We are trying to return type string instead of Test . And what to do? Lets create some type which could store some value or error string.
 {% highlight csharp %}
 public class Check<T> where T : class
 {
@@ -186,20 +185,20 @@ public static Check<TB> Defend<TA,TB> (TA a, Func<TA, TB> f)
 		: new Check<TB> (f (a));
 }
 {% endhighlight %}
-Вроде выглядит красиво. Попробуем в деле.
+Looks beatiful. In action:
 {% highlight csharp %}
 public static void DefesiveCompareGeneric2 (string[] args)
 {
 	//expected Check<Test> but Check<Check<Test>>
-	Check<Test> res = Defend2Generic2 (GetData<Test> (),
-		a => Defend2Generic2 (GetData<Test> (),
+	Check<Test> res = Defend (GetData<Test> (),
+		a => Defend (GetData<Test> (),
 			          b => a == b ? a : b));
 
 	Console.WriteLine (res);
 	Console.WriteLine ("finished!\n");
 }
 {% endhighlight %}
-Опять проблема, вместо того чтобы вернуть в res тип Check<Test> туда приходит тип Check<Check<Tese>>. Попробуем изменить немного логику работы чтобы предотвратить эту ошибку.
+Problem again, our code returns Check<Check<Test>> instead of Check<Test> and it is not very good. We will change our code to avoid this problem.
 {% highlight csharp %}
 public class Check2<T>
 	where T : class
@@ -254,7 +253,7 @@ public static Func<Check2<T>> Lift<T> (Func<T> f)
 	};
 }
 {% endhighlight %}
-Теперь проверка на нулл происходит в функции лифт, задача которой преобразовать функциюю возвращающую T в фукцию возвращающую Check<T>. Проблема решена. Можно думать об этом так: есть обычные функции и есть наша функция дефенд. Но для того чтобы фукция дефенд могла работаь с нашими фукциями их надо адаптировать. Вот как раз адаптацией функция lift и занимается. Проверяем.
+Now null check test is in List function. And the main task of this function is to wrap any function which retruns T into function which returns Check<T>. Problem solved. We can think about it in this way: we have some functions and our fucntion Defend. But to use them together we need to adapt all used functions. And our lift function solves that problem. Checking.
 {% highlight csharp %}
 public static void DefesiveCompare (string[] args)
 {
@@ -267,7 +266,7 @@ public static void DefesiveCompare (string[] args)
 	Console.WriteLine ("finished!\n");
 }
 {% endhighlight %}
-Опять проблема, концовка вида b => a == b ? a : b возвращает тип Test который не адаптирован к функции Defend. Напишем простую вспомогательную функцию Return, которую будем дергать в самом конце и немного отрефакторим код.
+Problem, problem, problem. Our end b => a == b ? a : b retruns result not wrapped into Check type. Lets write some helper function which wraps any type T into Check. The name of function will be return. Lets add it and do some refactoring
 {% highlight csharp %}
 public class Check3<T>
 {
@@ -335,9 +334,7 @@ public static void DefesiveCompare (string[] args)
 	Console.WriteLine ("finished!");
 }
 {% endhighlight %}
-Ура все заработало! Итак что мы имеем: тип обертку Check над T, две функции Defend, Return и все это вместе позволяет нам писать защищенный код без кучи if проверок. На самом деле мы можем определить другой враппер класс и описать функцию return и defend над ним и получить довольно интересные возможности по исполнению dry кода в цепочке функций. На самом деле возможностей у этого паттерна намного больше и он давно известен под названием монада, вот только функция defend там называется bind. 
-Вот только есть один недостаток: очень уж неудобно записывать подобным образом код в виде вложенных функций. К счастью решение есть. В некоторых языках есть поддержка монадического синтаксиса, например в csharp это linq queries, в Haskell Do нотация, в fsharp computation expressions. К слову сказать возможности computation expressions выходят далеко за пределы монад, но об этом в другой раз. Давайте попробуем адаптировать наш код под linq expressions для этого нам надо над нашим враппер типом описать статическую екстеншн функцию SelectMany. Экстеншн функция это статическая функция которую можно подцепить к существующему классу. Давайте ее определим и заодно отрефакторим код:
-
+Awesome. It works as expected. So what do we have? Wrapper type Check over any type T. Two functions Defend and Return. And this is all what we need to write some defensive code without a lot of null checks. But we can write some other wrapper type and define functions Return and Defend over it with different functionality in function Defend. It will allow us to use the same code but now with different effect. For example instead of check we can implement async effect(and we do that later). This pattern is well known as monad and have a lot more possibilities to do, but instead of using Defend name for composion function usually used Bind name.  One minor problem that our consuming code looks not very beatiful in terms of wrapped functions and we as imperative developers prefere simple line by line code. Fortunately for us some solutions are already here. In some programming languages we have support for syntaxis sugar over monads: linq expressions in c#, do notation in Haskell and computation expressions in fsharp. Computation expressions is not only for monad syntax but we will discuss it in next posts. Lets try to adopt our code to linq expressions, we should implement extension function SelectMany for our wrapper type. 
 {% highlight csharp %}
 public class Check<T>
 {
@@ -439,7 +436,7 @@ class MainClass
 	}
 }
 {% endhighlight %}
-Вот теперь все в порядке. И подобным образом мы можем определить другие монады например async которая позволит нам выполнять наш код асинхронно(мы ее напишем чуть позже). Мир чудесен. Но не в нашем туториале. Одно из достоинств монад в том что описав код над монадой, мы можем его запускать поверх других монад до тех пор пока монада внутри себя проносит тот же тип. Например сравните код для монады Async
+Now everything is ok. We can use this way to add syntatic shugare for other wrapper types. One of the advantages of monads is that describing the code over a monad, we can run it on top of other monads until monad carries within itself the same type. For example compare the code for the Async monad
 {% highlight csharp %}
 var getData = AsyncMonad.Lift (GetData);
 var res = 
@@ -447,7 +444,7 @@ var res =
 	from b in getData ()
 	select a.Substring (0, 10) + b.Substring (10, 20);
 {% endhighlight %}
-и монады Check
+and Check monad
 {% highlight csharp %}
 var getData = CheckMonad.Lift (GetData);
 var res = 
@@ -455,7 +452,7 @@ var res =
 	from b in getData ()
 	select a.Substring (0, 10) + b.Substring (10, 20);
 {% endhighlight %}
-Очень круто но есть проблема с композицией монад. Допестим хотелось бы нам заставить работать функции которые возвращают Async<Check<T>> с нашим красивым синтаксисом. Однако наша фунция Bind в типе Async ничего не знают о вложенном типе Check, поэтому наш красивый код работать не будет, наша функция bind развернет только Async и вернет Сheck<T> вместо T. Вот тут в дело вступают монад трансформеры. Что такое монад трансформер? Это такая штука которая беря на вход неизвестную монаду добавляет к ней функциональность известной трансформеру монады и в результате получаем комбинированную монаду. Допустим в нашем случае к монадам Async<T> и Check<T> которые мы не можем использовать вместе, мы можем написать монад трансформеры AsyncT<T,ParеntMonad> и CheckT<T, ParentMonad> и для нашего случая Async<Check<T>> мы спокойно можем сделать что то типа такого:
+Very cool but there is a problem with the composition of monads. We would uses the same code with functions that return Async <Check <T>>. However, our code in the Bind function of type Async knows nothing about nested type Check, so our code will not work, our bind function unwraps only Async and returns Check <T> instead of T. Here monads transformers come into play. What is a monad transformer? This is a sort of thing which is taking an unknown monad as input adds some functionality of other monad and the result is a combined monad. Suppose in our case to monads Async <T> Check <T> which could not be used together, we can write monads transformers AsyncT <T,ParentMonad> and CheckT <T, ParentMonad>.For our case Async <Check <T> > we can safely do something like this:
 {% highlight csharp %}
 var getData = CheckT<T, Async<T>>.LiftT (AsyncMonad.Lift (GetData));
 var res = 
@@ -463,7 +460,7 @@ var res =
 	from b in getData ()
 	select a.Substring (0, 10) + b.Substring (10, 20);
 {% endhighlight %}
-Обычно все туториалы в этом месте оканчиваются словами о том что подбные штуки есть в Хаскелл и Скала, но в C# нету higher kinded types и тут их реализовать невозможно. Занавес. Но мы то прожженные SharePoint энтерпрайз разработчики, мы не знаем слов любви и жалости. Заказчику НАДО значит надо. Ок давайте посмотрим на эту проблему поближе. Мы разберем типичный пример. На самом деле он не показателен, так как конкретно эту проблему можно обойти несколькими способами, но мы решим ее механизмом который позволит в дальнейшем решить проблему трансформеров. Итак есть интерфейс:
+Usually all "monad in c#"" tutorials ends here with words: this kind of things could exists in languages like Haskell which supports higher kinded types but not in c#. But we as a smart developers well knows that we could implement some workaround over any problem so lets try to create one. We will look on a typical example with Functor interface. When we solve that not so hard problem we will be able to use the same workaround for implementation of monad transformers in c#. So Functor interface looks like this:
 {% highlight csharp %}
 interface IFunctor<T> {
 	T<B> FMap<A, B>(Func<A, B> f, T<A> a);

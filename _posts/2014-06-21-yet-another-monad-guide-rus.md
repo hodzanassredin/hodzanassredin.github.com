@@ -1,7 +1,7 @@
 ---
 published: true
 layout: post
-title: Монады и монад трансформеры для простых смертных на чистом С#.
+title: Монады и монад трансформеры для разработчиков на С#.
 tags : [lessons, csharp, monad]
 ---
 
