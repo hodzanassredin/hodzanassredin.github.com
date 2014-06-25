@@ -905,7 +905,8 @@ static void Main (string[] args)
 	var task = checkT
 					.Value
 					.CastM<	CheckedVal<string>, 
-							Async.AsyncM<CheckedVal<string>>, Async> ()
+							Async.AsyncM<CheckedVal<string>>,
+							Async> ()
 					.Task;
 	Console.WriteLine (task.Result);
 	Console.WriteLine ("finished!");
