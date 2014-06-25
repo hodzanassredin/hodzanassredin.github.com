@@ -169,7 +169,11 @@ public class Check<T> where T : class
 
 	public override string ToString ()
 	{
-		return string.Format ("[Check: IsFailed={0}, FailMesssage={1}, Value={2}]", IsFailed, FailMesssage, Value);
+		return string.Format (
+			"[Check: IsFailed={0}, FailMesssage={1}, Value={2}]",
+			 IsFailed, 
+			 FailMesssage, 
+			 Value);
 	}
 }
 
