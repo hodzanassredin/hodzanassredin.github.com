@@ -62,7 +62,7 @@ public static void Compare (string[] args)
 
 {% endhighlight %}
 
-Ok code now looks more safe but we have repeated code lets remove it to support DRY principle.
+Ok, code now looks more safe, but we have repeated code, lets remove it to support DRY principle.
 
 {% highlight csharp %}
 public static bool Defend (object o)
@@ -90,7 +90,7 @@ public static void Compare (string[] args)
 }
 {% endhighlight %}
 
-Looks better, but anyway we must add if check for every GetData invocation. Lets try to move if check into Defend function.
+Looks better, but anyway we must add if check for every GetData invocation. Lets move if check into Defend function.
 
 {% highlight csharp %}
 public static string Defend (object a, Func<object, string> f)
@@ -109,7 +109,7 @@ public static void Compare (string[] args)
 }
 {% endhighlight %}
 
-Just perfect but we have a problem in case of using some other type for example class Test. During execution it will be downcasted to Syste.Object and we will not be able to use its members.
+Just perfect, but we have a problem in case of using some other type, for example class Test. During execution it will be downcasted to System.Object and we will not be able to use its members. 
 
 {% highlight csharp %}
 class Test
@@ -136,7 +136,7 @@ public static T Defend<T> (T a, Func<T, T> f)
 	return a == null ? "Can't compare" : f (a);
 }
 {% endhighlight %}
-New problem, we are trying to return type string instead of Test. And what to do? Lets create some type which could store some value or error string.
+New problem, we are trying to return a type string instead of a type Test. And what to do? Lets create some type which could store some value or error string.
 {% highlight csharp %}
 public class Check<T> where T : class
 {
@@ -253,7 +253,7 @@ public static Func<Check<T>> Lift<T> (Func<T> f)
 	};
 }
 {% endhighlight %}
-Now null check test is in List function. And the main task of this function is to wrap any function which returns T into function which returns Check<T>. Problem solved. We can think about it in this way: we have some functions and our function Defend. But to use them together we need to adapt all used functions. And our lift function solves that problem. 
+Now null check test lives in a Lift function. And the main task of the function is to wrap any function which returns T into function which returns Check<T>. Problem solved. We can think about it in this way: we have some functions and our function Defend. But to use them together we need to adapt all used functions to Defent function. And this is main purpose of the lift function. 
 {% highlight csharp %}
 public static void Compare (string[] args)
 {
@@ -266,7 +266,7 @@ public static void Compare (string[] args)
 	Console.WriteLine ("finished!\n");
 }
 {% endhighlight %}
-Problem, problem, problem. Our end b => a == b ? a : b returns result not wrapped into Check type. Lets write some helper function which wraps any type T into Check. The name of function will be return. Lets add it and do some refactoring
+Problem, problem, problem. At the end we return result not wrapped into the Check type. Lets write some helper function which wraps any type T into the Check. The name of function will be return. Lets add it and do some refactoring
 {% highlight csharp %}
 public class Check<T>
 {
@@ -334,7 +334,7 @@ public static void DefesiveCompare (string[] args)
 	Console.WriteLine ("finished!");
 }
 {% endhighlight %}
-Awesome, it works as expected. So what do we have? Wrapper type Check over any type T. Two functions Defend and Return. And this is all what we need to write some defensive code without a lot of null checks. But we can write some other wrapper type and define functions Return and Defend over it with different functionality in function Defend. It will allow us to use the same code but now with different effect. For example instead of check we can implement async effect(and we do that later). This pattern is well known as monad and have a lot more possibilities to do, but instead of using Defend name for composition function usually used Bind name.  One minor problem that our consuming code looks not very beautiful in terms of wrapped functions and we as imperative developers prefer simple line by line code. Fortunately for us some solutions are already here. In some programming languages we have support for syntactic sugar over monads: linq expressions in c#, do notation in Haskell and computation expressions in fsharp. Computation expressions is not only for monad syntax but we will discuss it in next posts. Lets try to adopt our code to linq expressions, we should implement extension function SelectMany for our wrapper type. 
+Awesome, it works as expected. So what do we have? Wrapper type Check over any type T, two functions Defend and Return. And this is all what we need to write some defensive code without null checks. But we can write some other wrapper type and define functions Return and Defend over it with a different functionality in function Defend. It will allow us to use the same code, but now with different effect. For example instead of checking we can implement async effect(and we do that later). This pattern is well known as monad, but instead of using Defend name for composition function people usually use name Bind.  One minor problem is that our consuming code looks not very beautiful in terms of wrapped functions and we as imperative developers prefer simple line by line code. Fortunately for us, some solutions are already here. In some programming languages we have support for syntactic sugar over monads: linq expressions in c#, do notation in Haskell and computation expressions in fsharp. Computation expressions is not only for monad syntax, but we will discuss it in next posts. Lets try to adopt our code to linq expressions, we should implement extension function SelectMany for our wrapper type. 
 {% highlight csharp %}
 public class Check<T>
 {
@@ -436,7 +436,7 @@ class MainClass
 	}
 }
 {% endhighlight %}
-Now everything is ok. We can use this way to add syntactic sugar for other wrapper types. One of the advantages of monads is that describing the code over a monad, we can run it on top of other monads until monad carries within itself the same type. For example, compare the code for the Async monad
+Now everything is ok. We can use this way to add syntactic sugar for other wrapper types. One of the advantages of monads is that describing the code over a monad, we can run it on top of other monads, until monad carries within itself the same type. For example, compare the code for the Async monad
 {% highlight csharp %}
 var getData = AsyncMonad.Lift (GetData);
 var res = 
@@ -444,7 +444,7 @@ var res =
 	from b in getData ()
 	select a.Substring (0, 10) + b.Substring (10, 20);
 {% endhighlight %}
-and Check monad
+and the Check monad
 {% highlight csharp %}
 var getData = CheckMonad.Lift (GetData);
 var res = 
@@ -452,7 +452,7 @@ var res =
 	from b in getData ()
 	select a.Substring (0, 10) + b.Substring (10, 20);
 {% endhighlight %}
-Very cool but there is a problem with the composition of monads. We would uses the same code with functions that return Async <Check <T>>. However, our code in the Bind function of type Async knows nothing about nested type Check, so our code will not work, our bind function unwraps only Async and returns Check <T> instead of T. Here monads transformers come into play. What is a monad transformer? This is a sort of thing which is taking an unknown monad as input adds some functionality of other monad and the result is a combined monad. Suppose in our case to monads Async <T> Check <T> which could not be used together, we can write monads transformers AsyncT <T,ParentMonad> and CheckT <T, ParentMonad>.For our case Async <Check <T> > we can safely do something like this:
+Very cool, but there is a problem with the composition of monads. We would uses the same code with functions that return Async<Check <T>>. However, our code in the Bind function of the type Async knows nothing about nested type Check, so our code will not work, our bind function unwraps only Async and returns Check <T> instead of T. Here monads transformers come into play. What is a monad transformer? This is a sort of thing which is taking an unknown monad as input, adds some functionality of other monad and returns a combined monad. Suppose in our case with monads Async<T> and Check<T> which could not be used together, we can write monads transformers AsyncT<T,ParentMonad> and CheckT<T, ParentMonad>.For our case Async<Check<T>> we can safely do something like this:
 {% highlight csharp %}
 var getData = CheckT<T, Async<T>>.LiftT (AsyncMonad.Lift (GetData));
 var res = 
@@ -460,7 +460,7 @@ var res =
 	from b in getData ()
 	select a.Substring (0, 10) + b.Substring (10, 20);
 {% endhighlight %}
-Usually all "monad in c#"" tutorials ends here with words: this kind of things could exists in languages like Haskell which supports higher kinded types but not in c#. But we as a smart developers well knows that we could implement some workaround over any problem so lets try to create one. We will look on a typical example with Functor interface. When we solve that not so hard problem we will be able to use the same workaround for implementation of monad transformers in c#. So Functor interface looks like this:
+Usually all "monad in c#"" tutorials ends here with words: this kind of things could exists in languages like Haskell which supports higher kinded types but not in c#. But we as a smart developers well knows that we could implement some workaround over any problem, so lets try to create one. We will look on a typical example with Functor interface. When we solve that not so hard problem we will be able to use the same workaround for implementation of monad transformers in c#. So Functor interface looks like this:
 {% highlight csharp %}
 interface IFunctor<T> {
 	T<B> FMap<A, B>(Func<A, B> f, T<A> a);
