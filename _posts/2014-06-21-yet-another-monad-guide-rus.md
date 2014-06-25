@@ -1,11 +1,11 @@
 ---
 published: true
 layout: post
-title: Monads and monad transformers for mere mortals in pure C#.
+title: Монады и монад трансформеры для простых смертных на чистом С#.
 tags : [lessons, csharp, monad]
 ---
 
-## {{page.title}} [RUS]({{ site.url }}/2014/06/21/yet-another-monad-guide-rus.html)
+## {{page.title}}
 
 <p class="meta">25 June 2014 &#8211; Karelia</p>
 
