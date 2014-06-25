@@ -181,7 +181,9 @@ public static Check<TB> Defend<TA,TB> (TA a, Func<TA, TB> f)
 			where TA : class
 			where TB : class//applied only for TB and TA which can be null
 {
-	return a == null ? new Check<TB> ("Can't compare") : new Check<TB> (f (a));
+	return a == null 
+		? new Check<TB> ("Can't compare") 
+		: new Check<TB> (f (a));
 }
 {% endhighlight %}
 Вроде выглядит красиво. Попробуем в деле.
@@ -854,7 +856,8 @@ public static class CheckMonad
 		};
 	}
 
-	public static Func<Check.CheckM<TB>> Lift<TB> (this Func<CheckedVal<TB>> f)
+	public static Func<Check.CheckM<TB>> Lift<TB> (
+		this Func<CheckedVal<TB>> f)
 		where TB : class
 	{
 		return () => {
@@ -901,7 +904,8 @@ static void Main (string[] args)
 					.CheckT<string>, CheckForT<Async> > ();
 	var task = checkT
 					.Value
-					.CastM<CheckedVal<string>, Async.AsyncM<CheckedVal<string>>, Async> ()
+					.CastM<	CheckedVal<string>, 
+							Async.AsyncM<CheckedVal<string>>, Async> ()
 					.Task;
 	Console.WriteLine (task.Result);
 	Console.WriteLine ("finished!");
