@@ -131,12 +131,12 @@ public static void Test(){
 We can avoid this problem with generic parameters. 
 {% highlight csharp %}
 public static T Defend<T> (T a, Func<T, T> f)
-	where T: class//applied only for TA which can be null
+	where T: class//applied only for T which can be null
 {
 	return a == null ? "Can't compare" : f (a);
 }
 {% endhighlight %}
-New problem, we are trying to return a type string instead of a type Test. And what to do? Lets create some type which could store some value or error string.
+New problem, we are trying to return a type string instead of a type Test. And what to do? Lets create some type which could store a value or an error string.
 {% highlight csharp %}
 public class Check<T> where T : class
 {
@@ -253,7 +253,7 @@ public static Func<Check<T>> Lift<T> (Func<T> f)
 	};
 }
 {% endhighlight %}
-Now null check test lives in a Lift function. And the main task of the function is to wrap any function which returns T into function which returns Check<T>. Problem solved. We can think about it in this way: we have some functions and our function Defend. But to use them together we need to adapt all used functions to Defent function. And this is main purpose of the lift function. 
+Now null check test lives in a Lift function. And the main task of the function is to wrap any function which returns T into function which returns Check< T >. Problem solved. We can think about it in this way: we have some functions and our function Defend. But to use them together we need to adapt all used functions to Defent function. And this is main purpose of the lift function. 
 {% highlight csharp %}
 public static void Compare (string[] args)
 {
@@ -334,7 +334,7 @@ public static void DefesiveCompare (string[] args)
 	Console.WriteLine ("finished!");
 }
 {% endhighlight %}
-Awesome, it works as expected. So what do we have? Wrapper type Check over any type T, two functions Defend and Return. And this is all what we need to write some defensive code without null checks. But we can write some other wrapper type and define functions Return and Defend over it with a different functionality in function Defend. It will allow us to use the same code, but now with different effect. For example instead of checking we can implement async effect(and we do that later). This pattern is well known as monad, but instead of using Defend name for composition function people usually use name Bind.  One minor problem is that our consuming code looks not very beautiful in terms of wrapped functions and we as imperative developers prefer simple line by line code. Fortunately for us, some solutions are already here. In some programming languages we have support for syntactic sugar over monads: linq expressions in c#, do notation in Haskell and computation expressions in fsharp. Computation expressions is not only for monad syntax, but we will discuss it in next posts. Lets try to adopt our code to linq expressions, we should implement extension function SelectMany for our wrapper type. 
+Awesome, it works as expected. So what do we have? Wrapper type Check over any type T, two functions Defend and Return. And this is all what we need to write some defensive code without null checks. But we can write some other wrapper type and define functions Return and Defend over it with a different functionality in function Defend. It will allow us to use the same code, but now with different effect. For example instead of checking we can implement async effect(and we do that later). This pattern is well known as monad, and function Defnd has name Bind by convention in monad pattern.  One minor problem is that our consuming code looks not very beautiful in terms of wrapped functions and we as imperative developers prefer simple line by line code. Fortunately for us, some solutions are already here. In some programming languages we have support for syntactic sugar over monads: linq expressions in c#, do notation in Haskell and computation expressions in fsharp. Computation expressions is not only for monad syntax, but we will discuss it in next posts. Lets try to adapt our code to linq expressions, we should implement extension function SelectMany for our wrapper type. 
 {% highlight csharp %}
 public class Check<T>
 {
@@ -436,7 +436,7 @@ class MainClass
 	}
 }
 {% endhighlight %}
-Now everything is ok. We can use this way to add syntactic sugar for other wrapper types. One of the advantages of monads is that describing the code over a monad, we can run it on top of other monads, until monad carries within itself the same type. For example, compare the code for the Async monad
+Now everything is ok. We can use this pattern to add syntactic sugar for other wrapper types. We can use the same code for differnet monads, until monad carries within itself the same type. For example, compare the code for the Async monad
 {% highlight csharp %}
 var getData = AsyncMonad.Lift (GetData);
 var res = 
@@ -460,13 +460,13 @@ var res =
 	from b in getData ()
 	select a.Substring (0, 10) + b.Substring (10, 20);
 {% endhighlight %}
-Usually all "monad in c#"" tutorials ends here with words: this kind of things could exists in languages like Haskell which supports higher kinded types but not in c#. But we as a smart developers well knows that we could implement some workaround over any problem, so lets try to create one. We will look on a typical example with Functor interface. When we solve that not so hard problem we will be able to use the same workaround for implementation of monad transformers in c#. So Functor interface looks like this:
+Usually all "monad in c#"" tutorials ends here with words: this kind of things could exists in languages like Haskell which supports higher kinded types but not in c#. But we as a smart developers well know that we could implement some workaround over any problem, so lets try to create one. We will look on a typical example with Functor interface. When we solve that problem we will be able to use the same workaround for implementation of monad transformers in c#. So Functor interface looks like this:
 {% highlight csharp %}
 interface IFunctor<T> {
 	T<B> FMap<A, B>(Func<A, B> f, T<A> a);
 }
 {% endhighlight %}
-Nothing special is here, it describes a function which takes "a" value wrapped into a type T, unwraps it, applies function f to unwrapped value and finally wraps result into the type T. Everything seems to be ok, but we can't write this code in C#. C# doesn't support usage of type variable T as type constructor. I don't want to describe whole problem here and better way to understand this restriction is to copy interface definition into IDE and play with it. It is a good puzzle. Lets try to analyse that problem and solve it step by step. Why do we need type T here? We need it as a constraint to input and output of FMap function. Whey should be have the same wrapper type over different wrapped types. It guards us from incorrect implementations which takes Check< AType > and returns List< BType >. So we need to mark generic type by some other non generic type. How can we do that. It is simple.
+Nothing special is here, it describes a function which takes "a" value wrapped into a type T, unwraps it, applies function f to unwrapped value and finally wraps result into the type T. Everything seems to be ok, but we can't write this code in C#. C# doesn't support usage of type variable T as type constructor. I don't want to describe whole problem here and better way to understand this restriction is to copy interface definition into IDE and play with it. It is a good puzzle. Lets try to analyse that problem and solve it step by step. Why do we need type T here? We need it as a constraint to input and output of FMap function. They should have the same wrapper type over different wrapped types. It guards us from incorrect implementations which takes Check< AType > and returns List< BType >. So we need to mark generic type by some other non generic type. How can we do that. It is simple.
 {% highlight csharp %}
 public abstract class Wrapper
 {
@@ -480,7 +480,7 @@ public abstract class Wrapper
 	}
 }
 {% endhighlight %}
-Interesting. First of all we can be sure that instance of type Wrapper always be the instance of type WrapperImpl. But we need to keep wrapped type somewhere to do safe upcast. Lets introduce special type container, which stores generic type marker with wrapped type. Also we need to rewrite WrapperImple to support it. 
+Interesting. First of all we can be sure that instance of type Wrapper is the instance of type WrapperImpl. But we need to keep wrapped type somewhere to do safe upcast. Lets introduce special type container, which stores generic type marker with wrapped type. Also we need to rewrite WrapperImpl to support it. 
 {% highlight csharp %}
 public interface IGeneric<T, TCONTAINER>
 {
@@ -493,17 +493,11 @@ public class Wrapper{
 	}
 }
 {% endhighlight %}
-Now we can add helper method for upcasts.
+Now we can add helper method for safe upcasts.
 {% highlight csharp %}
 public static class GenericExts
 {
 	public static TM UpCast<T, TM, TMB> (this IGeneric<T, TMB> m)
-		where TM : IGeneric<T, TMB>
-	{
-		return (TM)m;//safe for single inheritance
-	}
-
-	public static IGeneric<T, TMB> DownCast<T, TM, TMB> (this TM m)
 		where TM : IGeneric<T, TMB>
 	{
 		return (TM)m;//safe for single inheritance
@@ -532,12 +526,6 @@ public interface IGeneric<T, TCONTAINER>
 public static class GenericExts
 {
 	public static TM UpCast<T, TM, TMB> (this IGeneric<T, TMB> m)
-		where TM : IGeneric<T, TMB>
-	{
-		return (TM)m;//safe for single inheritance
-	}
-
-	public static IGeneric<T, TMB> DownCast<T, TM, TMB> (this TM m)
 		where TM : IGeneric<T, TMB>
 	{
 		return (TM)m;//safe for single inheritance
@@ -575,7 +563,7 @@ public abstract class Wrapper
 		public CB FMap<B, CB> (Func<T, B> f) where CB : IGeneric<B, Wrapper>
 		{
 			var res = new WrapperImpl<B> (f (Value));
-			return res.Cast<B, CB,Wrapper> ();
+			return res.UpCast<B, CB,Wrapper> ();
 		}
 
 		#endregion
