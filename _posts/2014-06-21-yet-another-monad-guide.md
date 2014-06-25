@@ -198,7 +198,7 @@ public static void Compare (string[] args)
 	Console.WriteLine ("finished!\n");
 }
 {% endhighlight %}
-Problem again, our code returns Check<Check<Test>> instead of Check<Test> and it is not very good. We will change our code to avoid this problem.
+Problem again, our code returns Check< Check< T > > instead of Check< T > and it is not very good. We will change our code to avoid this problem.
 {% highlight csharp %}
 public class Check<T>
 	where T : class
@@ -886,7 +886,6 @@ public static Task<String> GetData ()
 
 static void Main (string[] args)
 {
-	//expected Check<Test> but Check<Check<Test>>
 	var getData = CheckMonad.LiftT (AsyncMonad.Lift (GetData));
 	var res = 
 		from a in getData ()
