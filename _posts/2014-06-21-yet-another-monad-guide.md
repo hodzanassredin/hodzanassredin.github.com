@@ -9,7 +9,7 @@ tags : [lessons, csharp, monad]
 
 <p class="meta">25 June 2014 &#8211; Karelia</p>
 
-During migration of a small project to fsharp, I thought a lot about using monads in practice. Subject fascinated me enough and I decided to describe my experience in a couple of posts. Unfortunately all the material demanded decent knowledge of monads and monad transformers, at the same time I wanted to make a material without any links to external materials, without a lot of words and simple for ordinary programmers who are not burdened by the knowledge of mathematics and functional programming language syntax. Thus was born the idea to write another explanation of what is a monad. Since this post is aimed at programmers, and it will be approached by code and not by the text or mathematics. Ready? Lets go.
+During migration of a small project to fsharp, I thought a lot about using monads in practice. Subject fascinated me enough and I decided to describe my experience in a couple of posts. Unfortunately all the material demanded decent knowledge of monads and monad transformers, at the same time I wanted to make a material without any links to external materials, without a lot of words and simple for ordinary programmers who are not burdened by the knowledge of mathematics and  syntax of some functional programming language. Thus was born the idea to write another explanation of what is a monad. Since this post is aimed at programmers, and it will be approached by code and not by the text or mathematics. Ready? Let's go.
 
 Lets look at some simple code:
 
@@ -41,7 +41,7 @@ public static void Compare (string[] args)
 GetData function imitates a query to a data source and randomly returns instance of required data type or null. Compare function uses GetData for retrieving two values, compares them and writes output to console. What we as a good programmers should fix at first in this sample? Right, we should add null checks and use style of defensive programming.
 
 {% highlight csharp %}
-public static void DefesiveCompare (string[] args)
+public static void Compare (string[] args)
 {
 	var a = GetData<Object> ();
 	if (a == null) {
@@ -74,7 +74,7 @@ public static bool Defend (object o)
 	return true;
 }
 
-public static void DefesiveCompareDry (string[] args)
+public static void Compare (string[] args)
 {
 	var a = GetData<Object> ();
 	if (Defend (a))
@@ -98,7 +98,7 @@ public static string Defend (object a, Func<object, string> f)
 	return a == null ? "Can't compare" : f (a);
 }
 
-public static void DefesiveCompareDry2 (string[] args)
+public static void Compare (string[] args)
 {
 	var res = Defend (GetData<Object> (), 
 		          (a) => Defend (GetData<Object> (), 
@@ -130,7 +130,7 @@ public static void Test(){
 {% endhighlight %}
 We can avoid this problem with generic parameters. 
 {% highlight csharp %}
-public static T Defend2Generic<T> (T a, Func<T, T> f)
+public static T Defend<T> (T a, Func<T, T> f)
 	where T: class//applied only for TA which can be null
 {
 	return a == null ? "Can't compare" : f (a);
@@ -187,7 +187,7 @@ public static Check<TB> Defend<TA,TB> (TA a, Func<TA, TB> f)
 {% endhighlight %}
 Looks beautiful. In action:
 {% highlight csharp %}
-public static void DefesiveCompareGeneric2 (string[] args)
+public static void Compare (string[] args)
 {
 	//expected Check<Test> but Check<Check<Test>>
 	Check<Test> res = Defend (GetData<Test> (),
@@ -200,22 +200,22 @@ public static void DefesiveCompareGeneric2 (string[] args)
 {% endhighlight %}
 Problem again, our code returns Check<Check<Test>> instead of Check<Test> and it is not very good. We will change our code to avoid this problem.
 {% highlight csharp %}
-public class Check2<T>
+public class Check<T>
 	where T : class
 {
-	private Check2 (T val)
+	private Check (T val)
 	{
 		Value = val;
 	}
 
-	public static Check2<T> Success (T val)
+	public static Check<T> Success (T val)
 	{
-		return new Check2<T> (val){ IsFailed = false };
+		return new Check<T> (val){ IsFailed = false };
 	}
 
-	public static Check2<T> Fail ()
+	public static Check<T> Fail ()
 	{
-		return new Check2<T> (null){ IsFailed = true };
+		return new Check<T> (null){ IsFailed = true };
 	}
 
 	public bool IsFailed {
@@ -237,28 +237,28 @@ public class Check2<T>
 	}
 }
 
-public static Check2<TB> Defend<TA,TB> (Check2<TA> a, Func<TA, Check2<TB>> f)
+public static Check<TB> Defend<TA,TB> (Check<TA> a, Func<TA, Check<TB>> f)
 	where TA : class//applied only for TA which can be null
 	where TB : class//applied only for TB which can be null
 {
-	return a.IsFailed ? Check2<TB>.Fail () : f (a.Value);
+	return a.IsFailed ? Check<TB>.Fail () : f (a.Value);
 }
 
-public static Func<Check2<T>> Lift<T> (Func<T> f)
+public static Func<Check<T>> Lift<T> (Func<T> f)
 	where T : class
 {
 	return () => {
 		var res = f ();
-		return res == null ? Check2<T>.Fail () : Check2<T>.Success (res);
+		return res == null ? Check<T>.Fail () : Check<T>.Success (res);
 	};
 }
 {% endhighlight %}
 Now null check test is in List function. And the main task of this function is to wrap any function which returns T into function which returns Check<T>. Problem solved. We can think about it in this way: we have some functions and our function Defend. But to use them together we need to adapt all used functions. And our lift function solves that problem. 
 {% highlight csharp %}
-public static void DefesiveCompare (string[] args)
+public static void Compare (string[] args)
 {
 	var getData = Lift<Test> (GetData<Test>);
-	Check2<Test> res = Defend<Test,Test> (getData (),
+	Check<Test> res = Defend<Test,Test> (getData (),
 		                   a => Defend<Test,Test> (getData (),
 			                   b => a == b ? a : b));
 	//unable to cast Test to Check<Test>
@@ -268,21 +268,21 @@ public static void DefesiveCompare (string[] args)
 {% endhighlight %}
 Problem, problem, problem. Our end b => a == b ? a : b returns result not wrapped into Check type. Lets write some helper function which wraps any type T into Check. The name of function will be return. Lets add it and do some refactoring
 {% highlight csharp %}
-public class Check3<T>
+public class Check<T>
 {
-	private Check3 (T val)
+	private Check (T val)
 	{
 		Value = val;
 	}
 
-	public static Check3<T> Success (T val)
+	public static Check<T> Success (T val)
 	{
-		return new Check3<T> (val){ IsFailed = false };
+		return new Check<T> (val){ IsFailed = false };
 	}
 
-	public static Check3<T> Fail ()
+	public static Check<T> Fail ()
 	{
-		return new Check3<T> (default(T)){ IsFailed = true };
+		return new Check<T> (default(T)){ IsFailed = true };
 	}
 
 	public bool IsFailed {
@@ -304,29 +304,29 @@ public class Check3<T>
 	}
 }
 
-public static Check3<TB> Defend<TA,TB> (Check3<TA> a, Func<TA, Check3<TB>> f)
+public static Check<TB> Defend<TA,TB> (Check<TA> a, Func<TA, Check<TB>> f)
 {
-	return a.IsFailed ? Check3<TB>.Fail () : f (a.Value);
+	return a.IsFailed ? Check<TB>.Fail () : f (a.Value);
 }
 
-public static Func<Check3<T>> Lift2<T> (Func<T> f)
+public static Func<Check<T>> Lift<T> (Func<T> f)
 	where T : class
 {
 	return () => {
 		var res = f ();
-		return res == null ? Check3<T>.Fail () : Check3<T>.Success (res);
+		return res == null ? Check<T>.Fail () : Check<T>.Success (res);
 	};
 }
 
-public static Check3<T> Return <T> (T val)
+public static Check<T> Return <T> (T val)
 {
-	return Check3<T>.Success (val);
+	return Check<T>.Success (val);
 }
 
 public static void DefesiveCompare (string[] args)
 {
-	var getData = Lift2<Test> (GetData<Test>);
-	Check3<Test> res = Defend<Test,Test> (getData (), 
+	var getData = Lift<Test> (GetData<Test>);
+	Check<Test> res = Defend<Test,Test> (getData (), 
 		                   a => Defend<Test,Test> (getData (), 
 			                   b => Return (a == b ? a : b)));
 
