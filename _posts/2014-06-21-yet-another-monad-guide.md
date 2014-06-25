@@ -498,7 +498,7 @@ Now we can add helper method for safe upcasts.
 public static class GenericExts
 {
 	public static TM UpCast<T, TM, TMB> (this IGeneric<T, TMB> m)
-		where TM : IGeneric<T, TMB>
+		where TM : TMB, IGeneric<T, TMB>
 	{
 		return (TM)m;//safe for single inheritance
 	}
@@ -526,7 +526,7 @@ public interface IGeneric<T, TCONTAINER>
 public static class GenericExts
 {
 	public static TM UpCast<T, TM, TMB> (this IGeneric<T, TMB> m)
-		where TM : IGeneric<T, TMB>
+		where TM : TMB, IGeneric<T, TMB>
 	{
 		return (TM)m;//safe for single inheritance
 	}
@@ -602,7 +602,7 @@ public interface IMonad<T, TMI>
 public static class MonadSyntax
 {
 	public static TM Cast<T, TM, TMB> (this IMonad<T, TMB> m)
-		where TM : IMonad<T, TMB>
+		where TM : TMB, IMonad<T, TMB>
 	{
 		return (TM)m;//safe for single inheritance
 	}
