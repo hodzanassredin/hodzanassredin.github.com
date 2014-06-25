@@ -475,7 +475,7 @@ public abstract class Wrapper
 		
 	}
 
-	public class WrapperImpl<T> : Wrapper
+	public sealed class WrapperImpl<T> : Wrapper
 	{
 	}
 }
@@ -487,7 +487,7 @@ public interface IGeneric<T, TCONTAINER>
 
 }
 public class Wrapper{
-	public class WrapperImpl<T> : Wrapper, IGeneric<T, Wrapper>
+	public sealed class WrapperImpl<T> : Wrapper, IGeneric<T, Wrapper>
 	{
 
 	}
@@ -565,7 +565,7 @@ public abstract class Wrapper
 		
 	}
 
-	public class WrapperImpl<T> : 
+	public sealed class WrapperImpl<T> : 
 				Wrapper, 
 				IGeneric<T, Wrapper>, 
 				IFunctorSelf<Wrapper, WrapperImpl<T> , T>
@@ -638,7 +638,7 @@ public class Check
 
 	}
 
-	public class CheckM<T>: Check, IMonad<T, Check>
+	public sealed class CheckM<T>: Check, IMonad<T, Check>
 	{
 		#region IMonad implementation
 
@@ -709,7 +709,7 @@ public class Async
 
 	}
 
-	public class AsyncM<T>: Async, IMonad<T, Async>
+	public sealed class AsyncM<T>: Async, IMonad<T, Async>
 	{
 		#region IMonad implementation
 
@@ -792,7 +792,7 @@ public class CheckForT<TMI>
 
 	}
 
-	public class CheckT<T>: CheckForT<TMI>, IMonad<T, CheckForT<TMI>>
+	public sealed class CheckT<T>: CheckForT<TMI>, IMonad<T, CheckForT<TMI>>
 	{
 		#region IMonad implementation
 
