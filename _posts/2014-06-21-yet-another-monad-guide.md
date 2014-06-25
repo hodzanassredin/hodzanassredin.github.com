@@ -466,7 +466,7 @@ interface IFunctor<T> {
 	T<B> FMap<A, B>(Func<A, B> f, T<A> a);
 }
 {% endhighlight %}
-Nothing special is here, it describes a function which takes a wrapped into T unwraps it and applies function f to unwrapped value after that it wraps B result int T thats all. Everything is ok, but we can't write this code in C#. C# doesn't support using of type variable T as type constructor. I don't want to describe whole problem here and better way to understand this restriction is to copy interface definition into IDE and play with it. It is a good puzzle. Lets try to analyse that problem and solve it step by step. Why do we need type T here? We need it to add a constraint to input and output of FMap function. Whey should be the same wrapper type over different wrapped types. It guards us from incorrect implementations which takes Check<AType> and returns List<BType>. So we need to mark generic type by some other non generic typeHow can we do that. It is simple.
+Nothing special is here, it describes a function which takes "a" value wrapped into a type T, unwraps it, applies function f to unwrapped value and finally wraps result into the type T. Everything seems to be ok, but we can't write this code in C#. C# doesn't support usage of type variable T as type constructor. I don't want to describe whole problem here and better way to understand this restriction is to copy interface definition into IDE and play with it. It is a good puzzle. Lets try to analyse that problem and solve it step by step. Why do we need type T here? We need it as a constraint to input and output of FMap function. Whey should be have the same wrapper type over different wrapped types. It guards us from incorrect implementations which takes Check<AType> and returns List<BType>. So we need to mark generic type by some other non generic type. How can we do that. It is simple.
 {% highlight csharp %}
 public abstract class Wrapper
 {
@@ -480,7 +480,7 @@ public abstract class Wrapper
 	}
 }
 {% endhighlight %}
-Interesting. Lets think which guarantee it gives to us. First of all we can be sure that instance of type Wrapper always be the instance of type WrapperImpl. But we need to keep wrapped type somewhere to do safe upcast. Lets introduce special type container which stores generic type marker with wrapped type. Also we ned to rewrite WrapperImple to support it.. 
+Interesting. First of all we can be sure that instance of type Wrapper always be the instance of type WrapperImpl. But we need to keep wrapped type somewhere to do safe upcast. Lets introduce special type container, which stores generic type marker with wrapped type. Also we need to rewrite WrapperImple to support it. 
 {% highlight csharp %}
 public interface IGeneric<T, TCONTAINER>
 {
@@ -519,7 +519,7 @@ public interface IFunctor<T>
 		where CB : IGeneric<B, T>;
 }
 {% endhighlight %}
-Bingo. One restriction is to follow single inheritance pattern when describing our container classes. Lets try to use out Functor interface in some csharp's idiomatic way.
+Bingo. One restriction is to follow single inheritance pattern when describing our container classes. Lets try to use out Functor interface in csharp's idiomatic way.
 {% highlight csharp %}
 //	interface IFunctor<T<_>> {
 //		T<B> FMap<A, B>(Func<A, B> f, T<A> a);
@@ -629,7 +629,7 @@ public static class MonadSyntax
 	}
 }
 {% endhighlight %}
-Now it should be clear what is going on here. We took our workaround for functor interface and applied it to our IManad interface. Now we can rewrite our Check monad and adapt it to out IMonad interface. Also now we can implement Async monad. Async monad implementation can be used as an example how to adapt some existing type to monadic interface. In our case we will build Async monad on top of Task<T> type.
+It should be clear what is going on here. We took our workaround for functor interface and applied it to our IManad interface. Now we can rewrite our Check monad and adapt it to out IMonad interface. Also now we can implement Async monad. Async monad implementation can be used as an example of how to adapt some existing type to monadic interface. In our case we will build Async monad on top of Task<T> type.
 {% highlight csharp %}
 public class Check
 {
@@ -783,7 +783,7 @@ class MainClass
 	}
 }
 {% endhighlight %}
-It works as expected. So we have polymorphic monads. Now lets build some transformer. We have type Async<Check<T>> which is a Async monad over type Check<T>, but we want to convert it into monad Async<Check<_>> over type T. How to do that? We need to wrap Async<Check<T>> into monad over type T. Lets name it as CheckT transformer for Check monad. At the end we will have type like this CheckT<Async<Check<T>>>, it is very similar to sliced bread. Main thing is that CheckT implements interface IMonad over T and not over Async<Check<T>>>. Repeat one more time: CheckT is a wrapper for type like SomeOtherMonad<CheckMonad<T>> and Lift function for CheckT convert functions which returns SomeMonad<CheckMonad<T>> into functions which returns CheckT<SomeOtherMonad<CheckMonad<T>>>. In Return function it will wrap value into the Check type, and after that will use return function of other monad to wrap it one more time and cast result to type CheckT. Bind function is a little bit harder to understand but logic are the same. So lets implement type CheckT. For better understanding I separated Check types into: container CheckedVal<T>, monad adapter CheckM for type CheckedVal<T> and monad transformer CheckT for type CheckedVal<T>. Check.CheckM. This separation is artificial and you can merge CheckedVal<T> and CheckM into the single one. Most attention should be paid to where we put internal monad marker in type CheckT. It is defined in parent type CheckForT<TMI>.CheckT<T>, but not in generic type CheckForT.CheckT<T,TMI>. This constraints our IMonad functions to use the same internal monad marker everywhere. And it is similar to partial type construction. So magic lives here:
+It works as expected, we have polymorphic monads. Time for transformers. We have type Async<Check<T>> it is an Async monad over type Check<T>, but we want to convert it into a monad Async<Check<_>> over the type T. How to do that? We need to wrap Async<Check<T>> into a monad over type T. Lets name it as CheckT transformer for the Check monad. At the end we will have a type like this CheckT<Async<Check<T>>>, it is very similar to a sliced bread. Main thing is that CheckT implements interface IMonad over T and not over Async<Check<T>>>. Repeat one more time: CheckT is a wrapper for types like SomeOtherMonad<CheckMonad<T>> and Lift function for CheckT convert functions which returns SomeMonad<CheckMonad<T>> into functions which returns CheckT<SomeOtherMonad<CheckMonad<T>>>. In Return function it will wrap value into the Check type, and after that will use Return function of other monad to wrap it one more time and finally cast result to type CheckT. Bind function is a little bit harder to understand, but logic is the same. So lets implement the CheckT type. For better understanding I separated Check types into: a container CheckedVal<T>, a monad adapter CheckM for the type CheckedVal<T> and a monad transformer CheckT for the type CheckedVal<T>. Check.CheckM. This separation is artificial and you can merge CheckedVal<T> and CheckM into the single one. Most attention should be paid to place where we put internal monad marker in type CheckT. It is defined in parent type CheckForT<TMI>.CheckT<T>, but not in generic type CheckForT.CheckT<T,TMI>. This constraints our IMonad functions to use the same internal monad marker everywhere. And it is similar to partial type construction. So magic lives here:
 {% highlight csharp %}
 public class CheckForT<TMI>
 {
