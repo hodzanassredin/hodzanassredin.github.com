@@ -568,7 +568,10 @@ public abstract class Wrapper
 		
 	}
 
-	public class WrapperImpl<T> : Wrapper, IGeneric<T, Wrapper>, IFunctorSelf<Wrapper, WrapperImpl<T> , T>
+	public class WrapperImpl<T> : 
+				Wrapper, 
+				IGeneric<T, Wrapper>, 
+				IFunctorSelf<Wrapper, WrapperImpl<T> , T>
 	{
 		#region IFunctorSelf implementation
 
@@ -694,7 +697,9 @@ public static class CheckMonad
 	{
 		return () => {
 			var res = f ();
-			return res == null ? Check.CheckM<TB>.Fail () : Check.CheckM<TB>.Success (res);
+			return res == null 
+				? Check.CheckM<TB>.Fail () 
+				: Check.CheckM<TB>.Success (res);
 		};
 	}
 }
@@ -714,7 +719,9 @@ public class Async
 			return new AsyncM<TB>(Task<TB>.FromResult(val));
 		}
 		//helper method two tasks composition
-		private static async Task<TB> BindTasks<TB> (Task<T> m, Func<T, Task<TB>> f)
+		private static async Task<TB> BindTasks<TB> (
+			Task<T> m, 
+			Func<T, Task<TB>> f)
 		{
 			var r = await m;
 			return await f(r);
@@ -722,7 +729,9 @@ public class Async
 
 		public IMonad<TB, Async> Bind<TB> (Func<T, IMonad<TB, Async>> f)
 		{
-			return new AsyncM<TB>(BindTasks(this.Task, (t) => f(t).CastM<TB, AsyncM<TB>, Async>().Task));
+			return new AsyncM<TB>(BindTasks(this.Task, 
+				(t) => f(t).CastM<TB, AsyncM<TB>, 
+				Async>().Task));
 		}
 
 		#endregion
@@ -756,7 +765,9 @@ class MainClass
 {
 	public static Task<String> GetData () 
 	{
-		return new WebClient().DownloadStringTaskAsync(new Uri("http://google.com"));
+		return new WebClient().DownloadStringTaskAsync(
+			new Uri("http://google.com")
+		);
 	}
 
 	static void Main (string[] args)
@@ -790,14 +801,20 @@ public class CheckForT<TMI>
 
 		public IMonad<TB, CheckForT<TMI>> Return<TB> (TB val)
 		{
-			return new CheckT<TB> (Value.Return<CheckedVal<TB>> (CheckedVal<TB>.Success (val)));
+			return new CheckT<TB> (
+				Value.Return<CheckedVal<TB>> (
+					CheckedVal<TB>.Success (val)
+				)
+			);
 		}
 
-		private IMonad<CheckedVal<TB>,TMI> BindInternal<TB> (CheckedVal<T> check, Func<T, IMonad<TB, CheckForT<TMI>>> f)
+		private IMonad<CheckedVal<TB>,TMI> BindInternal<TB> (
+			CheckedVal<T> check, 
+			Func<T, IMonad<TB, CheckForT<TMI>>> f)
 		{
 			return check.IsFailed 
 				? Value.Return<CheckedVal<TB>> (CheckedVal<TB>.Fail ()) 
-					: f (check.Value).CastM<TB, CheckT<TB>,CheckForT<TMI>> ().Value;
+				: f (check.Value).CastM<TB, CheckT<TB>,CheckForT<TMI>> ().Value;
 		}
 
 		public IMonad<TB, CheckForT<TMI>> Bind<TB> (Func<T, IMonad<TB, CheckForT<TMI>>> f)
