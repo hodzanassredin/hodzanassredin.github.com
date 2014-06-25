@@ -1,7 +1,7 @@
 ---
 published: true
 layout: post
-title: Monads and monad transformers for mere mortals in pure C#. DRAFT 
+title: Monads and monad transformers for mere mortals in pure C#. DRAFT
 tags : [lessons, csharp, monad]
 ---
 
@@ -466,7 +466,7 @@ interface IFunctor<T> {
 	T<B> FMap<A, B>(Func<A, B> f, T<A> a);
 }
 {% endhighlight %}
-Nothing special is here, it describes a function which takes a wrapped into T unwraps it and applies function f to unwrapped value after that it wraps B result int T thats all. Everything is ok, but we can't write this code in C#. C# doesn't support using of type variable T as type constructor. I don't want to describe whole problem here and better way to understand this restriction is to copy interface defenition into IDE and play with it. It is a good puzzle. Lets try to anylyze that problem and solve it step by step. Why do we need type T here? We need it to add a constraint to input and output of FMap function. Whey should be the same wrapper type over different wrapped types. It guars us from incorrect implementations which takes Check<A> and returns List<T>. So we need to mark generic type by some other non generic typeHow can we do that. It is simple.
+Nothing special is here, it describes a function which takes a wrapped into T unwraps it and applies function f to unwrapped value after that it wraps B result int T thats all. Everything is ok, but we can't write this code in C#. C# doesn't support using of type variable T as type constructor. I don't want to describe whole problem here and better way to understand this restriction is to copy interface defenition into IDE and play with it. It is a good puzzle. Lets try to anylyze that problem and solve it step by step. Why do we need type T here? We need it to add a constraint to input and output of FMap function. Whey should be the same wrapper type over different wrapped types. It guards us from incorrect implementations which takes Check<AType> and returns List<BType>. So we need to mark generic type by some other non generic typeHow can we do that. It is simple.
 {% highlight csharp %}
 public abstract class Wrapper
 {
