@@ -711,7 +711,7 @@ public class Async
 			Func<T, Task<TB>> f)
 		{
 			var r = await m;
-			return await f(r);
+			return await f(r);//could be rewriten as return f(r);
 		}
 
 		public IMonad<TB, Async> Bind<TB> (Func<T, IMonad<TB, Async>> f)
@@ -892,4 +892,4 @@ static void Main (string[] args)
 	Console.ReadLine ();
 }
 {% endhighlight %}
-Full code [here](https://gist.github.com/ hodzanassredin/28c4208206d9d88908f5 "code"). So we composed two monads into single one. This is real benefit for us now we can write generic code which is polymorphic for different monad types. And one of the monads was just a wrapper over existing type Task<T>. It is clear that we have problems with result unwrapping, but it can be avoided by moving final code into the monad syntax or by creating helper methods like runAsync. I hope this post was helpful for you and now you will be able to read articles about interesting problem solutions like parsing described in therms of monads. In the next chapters we will look at the differences between computation expressions and monads, will find that monads are Turing complete and discuss possibilities of monad application for real world problems and defining different semantics for monadic syntax. 
+Full code [here](https://gist.github.com/ hodzanassredin/28c4208206d9d88908f5 "code"). So we composed two monads into single one and this is a real benefit for us, now we can write generic code which is polymorphic for different monad types and have a way to cmpose monads. One of the monads was just a wrapper over existing type Task<T>. It is clear that we have problems with result unwrapping, but it can be avoided by moving final code into the monad syntax or by creating helper methods like runAsync. I hope this post was helpful for you and now you will be able to read articles about interesting problems solutions, like parsing, described in therms of monads. In the next chapter we will look at the differences between computation expressions and monads, will find that monads are Turing complete and will see how to use monads to solve real world problems and to create DSLs. 
