@@ -1,7 +1,7 @@
 ---
 published: true
 layout: post
-title: Monads and monad transformers for mere mortals in pure C#. DRAFT
+title: Monads and monad transformers for mere mortals in pure C#.
 tags : [lessons, csharp, monad]
 ---
 
