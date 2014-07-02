@@ -136,7 +136,8 @@ public class MainClass{
 											CheckForT<Async>
 											.CheckT<List<string>>> (
 				              addrsUnwrapped => 
-				              	Return (addrsUnwrapped.Count > 0), checkHeadAndReturnTail
+				              	Return (addrsUnwrapped.Count > 0),
+				              	checkHeadAndReturnTail
 				    )
 			        select Unit.Value;
 
