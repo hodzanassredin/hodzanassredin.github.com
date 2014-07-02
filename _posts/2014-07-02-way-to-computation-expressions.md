@@ -211,10 +211,11 @@ As we can see there is no direct representations for if and loop because linq qu
 Lets sum up our observations.
 1. We can build monads and monad transformers in c#.
 2. Limitations of representation for types in CLR forces us to use the Single Inheritance hack which can be a cause of bugs.
-3. Usage of monad transformers can be difficult. Types like CheckT<AsyncM<CheckM<T>>> is not what we really want to see in our code every day, just imagine if we merge 3 or more monads into single one it will be absolutely impossible to read and debug.
-4. In c# we have support for describing semantics of languages that is similar to relational and hierarchical query languages.
+3. Usage of monad transformers can be difficult. Types like CheckT<AsyncM<CheckM<T>>> is not what we really want to see in our code every day, just imagine if we merge 3 or more monads into single one, it will be absolutely impossible to maintain.
+4. In c# we have support for describing semantics of languages which is similar to relational and hierarchical query languages.
 
 And what would be great to have?
+
 1. Express monads in a simple way.
 2. Have syntatic support for imperative languages in monadic computations. 
 3. Have better way to dispatch current monad into computation. Something Like setting named scope. Also it would be great to have this named scopes to be first class values.
