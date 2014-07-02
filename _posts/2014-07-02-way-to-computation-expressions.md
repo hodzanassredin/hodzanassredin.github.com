@@ -171,7 +171,7 @@ public class MainClass{
 	}
 }
 {% endhighlight %}
-So we can express any possible algorithm for our monads, but it is very difficult to read and understand. It would be great to have some additional support from linq to add some additional syntatic sugar. Lets check which keywords we can be used in linq queries:
+So we can express any possible algorithm for our monads, but it is very difficult to read and understand. It would be great to have some additional support from linq to add some additional syntatic sugar. Lets check which keywords we can use in linq queries:
 Where, Select, SelectMany, Join, GroupJoin, OrderBy, OrderByDescending, ThenBy, ThenByDescending, GroupBy, and Cast. 
 With type signatures it looks like this([more info](http://msdn.microsoft.com/en-us/library/bb308966.aspx#csharp3.0overview_topic19)):
 {% highlight csharp %}
