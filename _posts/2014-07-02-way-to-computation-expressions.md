@@ -114,23 +114,32 @@ public class MainClass{
 				Console.WriteLine (str);
 				return Return (Unit.Value);
 			};
-		Func<List<String>, CheckForT<Async>.CheckT<List<String>>> checkHeadAndReturnTail = 
+		Func<List<String>, CheckForT<Async>.CheckT<List<String>>> 
+			checkHeadAndReturnTail = 
 			adressList => {
-				var res = from address in Return (Head (adressList))
-				          //from unit in print ("Checking address:" + address)
-			from response in getData (Head (adressList))
-				          //from unit2 in print ("Checked address:" + address)
-				select Tail (adressList);
-				return res.CastM<List<String>, CheckForT<Async>.CheckT<List<String>>,CheckForT<Async>> ();
+				var res = 
+					from address in Return (Head (adressList))
+				    //from unit in print ("Checking address:" + address)
+					from response in getData (Head (adressList))
+				    //from unit2 in print ("Checked address:" + address)
+					select Tail (adressList);
+				return res.CastM<List<String>, 
+								 CheckForT<Async>.CheckT<List<String>>,
+								 CheckForT<Async>> ();
 			};
 
-		Func<CheckForT<Async>.CheckT<List<string>>, IMonad<Unit, CheckForT<Async>>> whileLoop = 
-			addrsM => from a in addrsM.WhileM<List<string>, CheckForT<Async>, CheckForT<Async>.CheckT<List<string>>> (
+		Func<CheckForT<Async>.CheckT<List<string>>, 
+			IMonad<Unit, CheckForT<Async>>> whileLoop = 
+				addrsM => 
+					from a in addrsM.WhileM<List<string>, 
+											CheckForT<Async>,
+											CheckForT<Async>.CheckT<List<string>>> (
 				              addrsUnwrapped => Return (addrsUnwrapped.Count > 0), checkHeadAndReturnTail)
 			          select Unit.Value;
 
 		var res2 = 
-			from addrs in Return (new List<string>{ "http://google.com", "http://yandex.ru" })
+			from addrs in Return (
+				new List<string>{ "http://google.com", "http://yandex.ru" })
 			let addrsM = Return (addrs)
 			let predicate = Return (addrs.Count == 2)
 			from r in predicate.IfM<Unit, CheckForT<Async>, CheckForT<Async>.CheckT<Unit>> (
