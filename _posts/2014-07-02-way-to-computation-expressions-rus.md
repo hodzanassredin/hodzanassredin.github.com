@@ -216,13 +216,46 @@ let divideByWorkflow init x y z =
         return c
         }    
 {% endhighlight %}
-This code is a copy from the great "Computation Expressions" series, I strongly recommend you to read it on a site [Fsharp for fun and profit](http://fsharpforfunandprofit.com/posts/computation-expressions-intro/). In computation expressions we could use syntax which are very close to fsharp, but has different semantics defined by a builder. We can use limited set of keywords like let! from previous example which is good enought to express any possible imperative workflow. List of possible constructs includes for loops, try catch blocks, let and do bindings. All predefined keywords maps into limited set of methods defined in builder: Bind, Delay, Return, ReturnFrom, Run, Combine, For, TryFinally,TryWith, Using, While, Yield, YieldFrom, Zero. Also we can add support 
-
+This code is a copy from the great "Computation Expressions" series, I strongly recommend you to read it on a site [Fsharp for fun and profit](http://fsharpforfunandprofit.com/posts/computation-expressions-intro/). In computation expressions we could use syntax which are very close to fsharp, but has different semantics defined by a builder. We can use limited set of keywords like let! from previous example which is good enought to express any possible imperative workflow. List of possible constructs includes for loops, try catch blocks, let and do bindings. All predefined keywords maps into invocations of methods defined in builder: Bind, Delay, Return, ReturnFrom, Run, Combine, For, TryFinally,TryWith, Using, While, Yield, YieldFrom, Zero. 
+For example if we define While method in our a builder then we could use while loops inside the builder scope.
 {% highlight csharp %}
+some { 
+    while predicate() do
+        action() 
+} 
 {% endhighlight %}
-
+Also we can pass builders as parameters because they are first class sitizens.
 {% highlight csharp %}
+let divideByWorkflow (workflow:MaybeBuilder) init x y z = 
+    workflow 
+        {
+        let! a = init |> divideBy x
+        let! b = a |> divideBy y
+        let! c = b |> divideBy z
+        return c
+        }    
 {% endhighlight %}
-
+ And one more thing, we can add our own keywords as a result  we can define not only new semantics for existing keywords but also can add new ones. [Example from](http://stackoverflow.com/questions/9272285/f-is-there-a-way-to-extend-the-monad-keyword-list/9275289#9275289)
 {% highlight csharp %}
+//sample from 
+type SeqBuilder() =
+    // Standard definition for 'for' and 'yield' in sequences
+    member x.For (source : seq<'T>, body : 'T -> seq<'R>) =
+      seq { for v in source do yield! body v }
+    member x.Yield item =
+      seq { yield item }
+
+    // Define an operation 'select' that performs projection
+    [<CustomOperation("select")>]
+    member x.Select (source : seq<'T>, [<ProjectionParameter>] f: 'T -> 'R) : seq<'R> =
+        Seq.map f source
+
+    // Defines an operation 'reverse' that reverses the sequence    
+    [<CustomOperation("reverse", MaintainsVariableSpace = true)>]
+    member x.Expand (source : seq<'T>) =
+        List.ofSeq source |> List.rev
+
+let mseq = SeqBuilder()
 {% endhighlight %}
+Computation expressions in fsharp meets all our needs from the list. Now we have possibility to hide all boilerplate code in builders and inside this builder write a code that doesnt contains technical details and could be as generic as possible. Builders allows us to define new llanguage with custom semantics and syntax. And you should understand that computation expresiions is not a monadic shuga like do notation in haskell it is a way to express new language inside our fsharp code. For example do notation in haskell often forces people to use monad insted of more simple cunstructs like monoid(we will see what it is in following posts) just to use syntatic shuga. Do notations is always turing complete but what if we want to build some little not turing complete language for example total language which has interesting property that for program written in that language termination is guaranteed? Do notation cant do tht but computation expressians can. Computation expression has it's own limitation. It's not polymorphic. Our workaround will not work in fsharp due to limitations of fsharp type system (F# does not allow type constraints involving two different type parameters). As a result we can't express polymorphic monads and monad transformers in fsharp but usually it is not a prolem at all. We don't need to compose different monads like in haskell where we have IO monad everywhere and it is not a problem to build specialized builder which will combine two other builders in a much more efficien way that monat transformers and without crayzy type signatures. You can see as example [AsyncSeq](http://tomasp.net/blog/async-sequences.aspx/) and [Update](http://tomasp.net/blog/2014/update-monads/) builders created by Tomas Petricek.
+
