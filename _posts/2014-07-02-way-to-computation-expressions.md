@@ -9,7 +9,7 @@ tags : [lessons, csharp, fsharp, monad]
 
 <p class="meta">02 July 2014 &#8211; Karelia</p>
 
-In the last [post]({{ site.url }}/2014/06/21/yet-another-monad-guide.html) we described, in short, what a monad is and how we can represent it in c#. Now lets check some limitations and possible solutions of our monad implementation. Monads allows us to describe some abstract computations line by line and run them on top of container types, which implements our IMonad interface. Also in c# we can use syntactic sugar, which allows us to express that computations in a more convenient way. In fact a monad is a computer, and abstract monadic computations is a program for it. But we can ask: is our monadic computer are turing complete? Could we express any algorithm in that monadic language? And the answer is yes. Without this property IO monad in Haskell could not imitate any possible way of computation with side effects. But enough words lets prove that by writing some code. Lets try to describe usual control flow expressions: "if else" and "while do" for IMonad interface and describe them in terms of bind and return members.
+In the last [post]({{ site.url }}/2014/06/21/yet-another-monad-guide.html) we described, in short, what a monad is and how we can represent it in c#. Now lets check some limitations and possible solutions of our monad implementation. Monads allows us to describe some abstract computations line by line and run them on top of container types, which implements our IMonad interface. Also in c# we can use syntactic sugar, which allows us to express that computations in a more convenient way. In fact a monad is a computer, and abstract monadic computations is a program for it. But we can ask: is our monadic computer are turing complete? Could we express any algorithm in that monadic language? And the answer is yes. Without this property IO monad in Haskell could not imitate any possible way of computation with side effects. But enough words, lets prove that by writing some code. Lets try to describe usual control flow's expressions: "if else" and "while do" for IMonad interface and describe them in terms of bind and return members.
 {% highlight csharp %}
 public static class TuringMonad
 {
@@ -173,7 +173,7 @@ public class MainClass{
 {% endhighlight %}
 So we can express any possible algorithm for our monads, but it is very difficult to read and understand. It would be great to have some additional support from linq to add some additional syntatic sugar. Lets check which keywords we can use in linq queries:
 Where, Select, SelectMany, Join, GroupJoin, OrderBy, OrderByDescending, ThenBy, ThenByDescending, GroupBy, and Cast. 
-With type signatures it looks like this([more info](http://msdn.microsoft.com/en-us/library/bb308966.aspx#csharp3.0overview_topic19)):
+We can use them by implementing methods from a ([list](http://msdn.microsoft.com/en-us/library/bb308966.aspx#csharp3.0overview_topic19)):
 {% highlight csharp %}
 delegate R Func<T1,R>(T1 arg1);
 delegate R Func<T1,T2,R>(T1 arg1, T2 arg2);
@@ -207,20 +207,20 @@ class G<K,T> : C<T>
    public K Key { get; }
 }
 {% endhighlight %}
-As we can see there is no direct representations for if and loop because linq queries was build mainly as a way to describe semantics of a language that is similar to relational and hierarchical query languages. And for some situations it is ok, but not for describing a semantics of an imperative language.
+As we can see, there is no direct representations for if and loop because linq queries was build mainly as a way to describe semantics of a language that is similar to relational and hierarchical query languages. And for some situations it is ok, but not for describing a semantics of an imperative language.
 
 Lets sum up our observations.
 
 1. We can build monads and monad transformers in c#.
 2. Limitations of representation for types in CLR forces us to use the Single Inheritance hack which can be a cause of bugs.
-3. Usage of monad transformers can be difficult. Types like CheckT<AsyncM<CheckM<T>>> is not what we really want to see in our code every day, just imagine if we merge 3 or more monads into single one, it will be absolutely impossible to maintain.
+3. Usage of monad transformers can be difficult. Types like CheckT<AsyncM<CheckM<T>>> is not what we really want to see in our code every day, just imagine if we merge 3 or more monads into a single one, it will be absolutely impossible to maintain.
 4. In c# we have support for describing semantics of languages which is similar to relational and hierarchical query languages.
 
 And what would be great to have?
 
 1. Express monads in a simple way.
-2. Have syntactic support for imperative languages in monadic computations. 
-3. Have better way to dispatch current monad into computation. Something Like setting named scope. Also it would be great to have this named scopes to be first class values.
+2. Have syntactic support for any type of language(include imperative one) in monadic computations. 
+3. Have a better way to dispatch current monad into computation. Something Like setting named scope. Also it would be great to have this named scope to be a first class value.
 
 Fortunately for us, we already have all of that in dot net and this is computation expressions of fsharp language. What is a computation expression? It is a simple builder class which defines some methods(like we defined SelectMany in query expressions). After that we can use instance of this class as a name for a scope in which we can use all syntax allowed by computation expressions and it will be translated into method calls of this instance. Lets check simple example.
 {% highlight fsharp %}
