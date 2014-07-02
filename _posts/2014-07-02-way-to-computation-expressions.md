@@ -133,17 +133,26 @@ public class MainClass{
 				addrsM => 
 					from a in addrsM.WhileM<List<string>, 
 											CheckForT<Async>,
-											CheckForT<Async>.CheckT<List<string>>> (
-				              addrsUnwrapped => Return (addrsUnwrapped.Count > 0), checkHeadAndReturnTail)
-			          select Unit.Value;
+											CheckForT<Async>
+											.CheckT<List<string>>> (
+				              addrsUnwrapped => 
+				              	Return (addrsUnwrapped.Count > 0), checkHeadAndReturnTail
+				    )
+			        select Unit.Value;
 
 		var res2 = 
 			from addrs in Return (
 				new List<string>{ "http://google.com", "http://yandex.ru" })
 			let addrsM = Return (addrs)
 			let predicate = Return (addrs.Count == 2)
-			from r in predicate.IfM<Unit, CheckForT<Async>, CheckForT<Async>.CheckT<Unit>> (
-				    () => whileLoop (addrsM).CastM<Unit, CheckForT<Async>.CheckT<Unit>, CheckForT<Async>> (), 
+			from r in predicate.IfM<Unit, 
+									CheckForT<Async>,
+								 	CheckForT<Async>
+								 	.CheckT<Unit>> (
+				    () => whileLoop (addrsM)
+				    		.CastM<Unit, 
+				    			   CheckForT<Async>.CheckT<Unit>,
+				    			   CheckForT<Async>> (), 
 				    () => Return (Unit.Value))
 			select r;
 			
