@@ -277,7 +277,9 @@ type SeqBuilder() =
 
     // Define an operation 'select' that performs projection
     [<CustomOperation("select")>]
-    member x.Select (source : seq<'T>, [<ProjectionParameter>] f: 'T -> 'R) : seq<'R> =
+    member x.Select (source : seq<'T>, 
+    				 [<ProjectionParameter>] f: 'T -> 'R) 
+    				 : seq<'R> =
         Seq.map f source
 
     // Defines an operation 'reverse' that reverses the sequence    
