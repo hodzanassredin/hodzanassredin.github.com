@@ -11,7 +11,7 @@ tags : [lessons, csharp, fsharp, monad]
 
 *Русский вариант поста не исправляется, и немного устарел, поэтому если вы видите явную ошибку, то гляньте [английскую версию]({{ site.url }}/2014/07/02/way-to-computation-expressions.html) вернее всего там она исправлена. У меня просто нет времени на синхронизацию исправлений между двумя версиями.*
 
-In the last [post]({{ site.url }}/2014/06/21/yet-another-monad-guide.html) we described, in short, what a monad is and how we can represent it in c#. Now lets check some limitations and possible solutions of our monad implementation. Monads allows us to describe some abstract computations line by line and run them on top of container types, which implements our IMonad interface. Also in c# we can use syntactic sugar, which allows us to express that computations in a more convenient way. In fact a monad is a computer, and abstract monadic computations is a program for it. But we can ask: is our monadic computer are turing complete? Could we express any algorithm in that monadic language? And the answer is yes. Without this property IO monad in Haskell could not imitate any possible way of computation with side effects. But enough words lets prove that by writing some code. Lets try to describe usual control flow expressions: "if else" and "while do" for IMonad interface and describe them in terms of bind and return members.
+В предыдущем [посте]({{ site.url }}/2014/06/21/yet-another-monad-guide.html) мы описали, кратко, что такое монада и как мы ее можем представить в C#. Теперь давайте рассмотрим проблемы применения нашей реализации монады и опишем приемлемое решение. Монады позволяют нам описывать некие асбтрактные вычисления линия за линией и потом запускать их поверх контейнерных типов которые имплементируют наш IMonad интерфейс. Также в c# мы можем использовать синтаксический сахар, который позволяет нам выражать наши монадические вычисления в более приемлемом виде. На самом деле монада это компьютер, и наши абстрактные монадические вычисления это описание программы для него. Это определнно так но мы можем задаться вопросом: являются ли наш монадический компьютер Тюринг полным? Можем ли мы выразить любой алгоритм на этом монадическом языке? И ответ да. Без этого свойства IO монада в Haskell не могла бы имитировать любой возможный путь исполненияс сайд эффектами. Но достаточно слов давайте подтвердим это в коде.Давайте попробуем описать обычные конструкции для управление путем исполнения: "if else" and "while do" для нашего интерфейса IMonad и определим из в терминах методов bind и return.
 {% highlight csharp %}
 public static class TuringMonad
 {
@@ -66,7 +66,7 @@ public static class TuringMonad
 }
 
 {% endhighlight %}
-Now we can express any possible control flow for IMonad interface. Lets for example extend our last example for monad Async < Check < > >.
+Теперь мы можем описать любой поток исполнения для IMonad интерфейса. Давайте для примера расширим наш последний пример для монады Async < Check < > >.
 {% highlight csharp %}
 //class representation of void result
 public class Unit
@@ -173,9 +173,9 @@ public class MainClass{
 	}
 }
 {% endhighlight %}
-Now we can express any possible algorithm for our monads. But it is very difficult to read and understand. It would be great to have some additional support from linq to add some additional syntatic sugar. Lets check which keywords we can be used in linq queries:
+Мы доказали что мы можем описать любой алгоритм для наших монад. Но к сожалению этот код черезвычайно тяжело читать и понимать. Было бы прекрасно если бы мы могли использовать linq query для добавления синтаксического сахара. Давайте глянем на список возможных ключевых слов доступных для определния в linq queries:
 Where, Select, SelectMany, Join, GroupJoin, OrderBy, OrderByDescending, ThenBy, ThenByDescending, GroupBy, and Cast. 
-With type signatures it looks like this([more info](http://msdn.microsoft.com/en-us/library/bb308966.aspx#csharp3.0overview_topic19)):
+Полный список с сигнатурами типов выглядит ([так](http://msdn.microsoft.com/en-us/library/bb308966.aspx#csharp3.0overview_topic19)):
 {% highlight csharp %}
 delegate R Func<T1,R>(T1 arg1);
 delegate R Func<T1,T2,R>(T1 arg1, T2 arg2);
@@ -209,20 +209,22 @@ class G<K,T> : C<T>
    public K Key { get; }
 }
 {% endhighlight %}
-As we can see there is no direct representations for if and loop because linq queries was build mainly as a way to describe semantics of a language that is similar to relational and hierarchical query languages. And for some situations it is ok, but not for describing a semantics of an imperative language 
-Lets sum up our observations.
-1. We can build monads and monad transformers in c#.
-2. Limitations of representation for types in CLR forces us to use the Single Inheritance hack which can be a cause of bugs.
-3. Usage of monad transformers can be difficult. Types like CheckT<AsyncM<CheckM<T>>> is not what we really want to see in our code every day, just imagine if we merge 3 or more monads into single one, it will be absolutely impossible to maintain.
-4. In c# we have support for describing semantics of languages which is similar to relational and hierarchical query languages.
+Как можно видеть здесь нет ключевых слов для прямого представления конструкций ветвления и цикла так как изначально linq queries были созданы для описания семантики языков которые похожи на языки реляционных или иерархических запросов. И это нормально, но не для описания семантики императивного языка. 
 
-And what would be great to have?
+Давайте суммируем наши наблюдения.
 
-1. Express monads in a simple way.
-2. Have syntactic support for imperative languages in monadic computations. 
-3. Have better way to dispatch current monad into computation. Something Like setting named scope. Also it would be great to have this named scopes to be first class values.
+1. Мы можем выражать монады и монад трансформеры в c#.
+2. Ограничения в представлени типов в CLR заставляет нас использовать паттерн "Единственный наследник" который может в принципе вызвать трудно отслеживаемые баги.
+3. Использование монад трансформеров довольно проблематично и неэффективно. Типы наподобии CheckT<AsyncM<CheckM<T>>> не совсем то что мы хотим видеть в нашем коде каждый день, просто представьте если мы обьеденим 3 или более монады в одну, это будет просто невозможно поддерживать.
+4. В c# мы имеем поддержку для описания семантики для реляционных или иерархических языков запросов.
 
-Fortunately for us, we already have all of that in dot net and this is computation expressions of fsharp language. What is a computation expression? It is a simple builder class which defines some methods(like we defined SelectMany in query expressions). After that we can use instance of this class as a name for a scope in which we can use all syntax allowed by computation expressions and it will be translated into method calls of this instance. Lets check simple example.
+А что бы нам хотелось иметь?
+
+1. Просто выражать монады и вычисления над ними.
+2. Иметь синтаксическую поддержку для разных языков включая императивные в монадических вычислениях. 
+3. Иметь лучьший чем в linq запросах путь диспатчить вычисления в монаду. Что то что позволило бы нам отвязать монаду от типа контейнера, что то похожее на именованный регион. Также было бы прекрасно чтобы эти регионы были обьектами первого класса..
+
+К счастью для нас, мы уже имеем все из перечисленного в дот нет и это "computation expressions" языка fsharp. Что же это такое? Это простой класс построитель в котором определены некоторые методы (наподобие SelectMany который мы определяли в linq). После этого мы можем использовать экземпляры этого класса как имя для региона в котором мы можем использовать весь синтксис допустимый в "computation expressions" и этот синтаксис будет оттранслирован в выховы методов этого экземпляра. Давайте посмотрим на простой пример.
 {% highlight fsharp %}
 type MaybeBuilder() =
     member this.Bind(x, f) = 
@@ -249,15 +251,15 @@ let divideByWorkflow init x y z =
         return c
         }    
 {% endhighlight %}
-This code is a copy from the great "Computation Expressions" series, I strongly recommend you to read it on a site [Fsharp for fun and profit](http://fsharpforfunandprofit.com/posts/computation-expressions-intro/). In computation expressions we could use syntax, which are very close to fsharp, but has different semantics defined by a builder. We can use a set of keywords, like let! from previous example, which is good enough to express any possible imperative workflow. List of possible constructs includes for loops, try catch blocks, let, do bindings and so on. All predefined keywords maps into invocations of methods defined in a builder: Bind, Delay, Return, ReturnFrom, Run, Combine, For, TryFinally,TryWith, Using, While, Yield, YieldFrom, Zero. 
-For example if we define While method in our builder then we could use while loops inside the builder scope.
+Этот код взыть из прекрасной серии постов "Computation Expressions", я очень рекомендую вам прочитать материал целиком на сайте [Fsharp for fun and profit](http://fsharpforfunandprofit.com/posts/computation-expressions-intro/). В "computation expressions" мы можем использовать синтаксис, который очень близок к fsharp, но имеет другую семантику определенную классом построителем. Мы можем использовать набор ключевых слов, наподобии let! с предыдущего примера, которыы достаточны для выражения любого возможного пути исполнения императивной программы. Список возможных конструкций включает в себы цеклы, try catch блоки, let, do биндинги и многое другое. Все ключевые слова транслируются на вызовы соответствующих методов определенных в билдер классе, вот стандартный список методов: Bind, Delay, Return, ReturnFrom, Run, Combine, For, TryFinally,TryWith, Using, While, Yield, YieldFrom, Zero. 
+Для примера если мы определим метода While в нашем билдере тогда мы сможем использовать циклы в именованном инстансом этого билдера регионе.
 {% highlight fsharp %}
 some { 
     while predicate() do
         action() 
 } 
 {% endhighlight %}
-Also we can pass builders as parameters, because they are first class citizens.
+И мы можем передавать билдеры как обыкновенные значения, так как по сути они являются простыми обьектами.
 {% highlight fsharp %}
 let divideByWorkflow (workflow:MaybeBuilder) init x y z = 
     workflow 
@@ -268,7 +270,7 @@ let divideByWorkflow (workflow:MaybeBuilder) init x y z =
         return c
         }    
 {% endhighlight %}
- And one more thing, we can define not only new semantics for existing keywords, but also can add new ones. [Example from](http://stackoverflow.com/questions/9272285/f-is-there-a-way-to-extend-the-monad-keyword-list/9275289#9275289)
+ И еде одно, мы может определять не только новую семантику для существующих ключевых слов, но и добавлять новые ключевый слова. [Например](http://stackoverflow.com/questions/9272285/f-is-there-a-way-to-extend-the-monad-keyword-list/9275289#9275289)
 {% highlight fsharp %}
 //sample from 
 type SeqBuilder() =
@@ -292,4 +294,4 @@ type SeqBuilder() =
 
 let mseq = SeqBuilder()
 {% endhighlight %}
-Computation expressions in fsharp meets all our needs from the list. Now we have possibility to hide all boilerplate code in a builder and inside the builder write a code that doesn't contains technical details and could be as generic as possible. Builders allows us to define new language with custom semantics and syntax. You should understand that computation expressions is not just a monadic sugar, like do notation in Haskell, it is a way to express new language inside our fsharp code. For example do notation in Haskell often forces people to use monad instead of more simple constructs like monoid(we will see what it is in following posts) just to use a syntactic sugar. Do notation is always turing complete, but what if we want to build some little and not turing complete language? For example a total language which has interesting property that all programs written in that language has guaranteed termination? Safe languages have not to be turing complete. Do notation can't do that but computation expressions can. Computation expressions has their own limitations. They are not polymorphic. Our workaround will not work in fsharp due to limitations of fsharp type system (F# does not allow type constraints involving two different type parameters). As a result we can't express polymorphic monads and monad transformers in fsharp, but usually it is not a problem at all. We don't need to compose different monads so often as we usually do in Haskell, where we have IO monad everywhere, and it is not a problem to build specialised builder which will combine two other builders in a much more efficient way than monad transformers and without crazy type signatures. You can look at [AsyncSeq](http://tomasp.net/blog/async-sequences.aspx/) and [Update](http://tomasp.net/blog/2014/update-monads/) builders created by Tomas Petricek. They are perfect examples of composed builders. Computation expressions is a perfect way to express some domain specific language in F#. We can define new syntax and semantics. One note is that we should use operational semantics(what keywords must do) but not denotational semantics(how keywords must be translated to other language). If you need to describe denotational semantics for a program in fsharp, for example some fsharp to js translator, then you should look at another feature of fsharp "code quotations". 
+"Computation expressions" в fsharp удовлетворяют все наши потребности из списка желаний. Теперь мы имеем возможность скрывать все нежелательные детали в билдере и внутри вычислений писать возможно доступный астрактный код который не содержит ненужных подробностей. Построители позволяют нам определять новые языки с необходимой семантикой и синтаксисом. Мы должны четко понимать что "computation expressions" не просто монадический синтаксический сахар, наподобии do нотации в Haskell, это путь для описания новых языков внутри fsharp кода. Для примера Do нотация в Haskell часто застваляет программистов использовать монаду вместо более простых конструкций наподобии моноидов(мы рассмотрим их в следующих постах) просто для того чтобы иметь возможность использовать синтаксический сахар. Do нотация всегда Тюринг полня, но что если мы хотим построить небольшой язык который является не Тюринг полным? Для примера тотальный язык оторые имеет интересное свойство что любая программа написанная на нем всегда гарантированно останавливается? Безопасные языки как правило не полны по Тюрингу. Do нотация этого не может но "computation expressions могут. "Computation expressions" имеют свои собственные пролемы. Они не полиморфны. Наш костыль с наследованием не будет работать в fsharp из за ограничений системы типов fsharp (F# не позволяет описывать ограничения генерик типов которые включают два разных параметра типа). Как результат мы не можем выразить полиморфные монады и монад трансформеры в fsharp, но в общем это не проблема. В fsharp у нас нет необходимости часто создавать композиции монад, как в Haskell где у нас есть IO монада практически везде, и это обычно не проблема построить споциализированный построитель который будет являтеся композицией двух других и он будет гораздо быстрее чем идетничная ему монада построенная с помощью монад трансформера и у нас не будет проблем с сумасшедшими сигнатурами типов. Вы можете взглянуть на [AsyncSeq](http://tomasp.net/blog/async-sequences.aspx/) и [Update](http://tomasp.net/blog/2014/update-monads/) построители созданыые Tomas Petricek-ом. Они являются прекрасными примерами композиции построителей. "Computation expressions" это хороший путь для выражения языков ориентированных на определнную область(internal DSL). Мы можем определять новый синтаксис и семантику. Однако отметим что мы должны использовать операционную семантику(что ключевые слома должны делать), а не денотационную семантику(как ключевые слова должны быть переведены на другой язык). Если вам действительно необходимо выразить денотационную семантику, например построить транслятор fsharp кода в JavaScript, тгда вым лучше использовать другую фичу fsharp "цитирование кода". 

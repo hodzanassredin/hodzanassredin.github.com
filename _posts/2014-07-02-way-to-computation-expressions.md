@@ -171,7 +171,7 @@ public class MainClass{
 	}
 }
 {% endhighlight %}
-Now we can express any possible algorithm for our monads. But it is very difficult to read and understand. It would be great to have some additional support from linq to add some additional syntatic sugar. Lets check which keywords we can be used in linq queries:
+So we can express any possible algorithm for our monads, but it is very difficult to read and understand. It would be great to have some additional support from linq to add some additional syntatic sugar. Lets check which keywords we can be used in linq queries:
 Where, Select, SelectMany, Join, GroupJoin, OrderBy, OrderByDescending, ThenBy, ThenByDescending, GroupBy, and Cast. 
 With type signatures it looks like this([more info](http://msdn.microsoft.com/en-us/library/bb308966.aspx#csharp3.0overview_topic19)):
 {% highlight csharp %}
@@ -207,8 +207,10 @@ class G<K,T> : C<T>
    public K Key { get; }
 }
 {% endhighlight %}
-As we can see there is no direct representations for if and loop because linq queries was build mainly as a way to describe semantics of a language that is similar to relational and hierarchical query languages. And for some situations it is ok, but not for describing a semantics of an imperative language 
+As we can see there is no direct representations for if and loop because linq queries was build mainly as a way to describe semantics of a language that is similar to relational and hierarchical query languages. And for some situations it is ok, but not for describing a semantics of an imperative language.
+
 Lets sum up our observations.
+
 1. We can build monads and monad transformers in c#.
 2. Limitations of representation for types in CLR forces us to use the Single Inheritance hack which can be a cause of bugs.
 3. Usage of monad transformers can be difficult. Types like CheckT<AsyncM<CheckM<T>>> is not what we really want to see in our code every day, just imagine if we merge 3 or more monads into single one, it will be absolutely impossible to maintain.
