@@ -249,7 +249,7 @@ let divideByWorkflow init x y z =
         return c
         }    
 {% endhighlight %}
-This code is a copy from the great "Computation Expressions" series, I strongly recommend you to read it on a site [Fsharp for fun and profit](http://fsharpforfunandprofit.com/posts/computation-expressions-intro/). In computation expressions we could use syntax, which are very close to fsharp, but has different semantics defined by a builder. We can use a set of keywords, like let! from previous example, which is good enough to express any possible imperative workflow. List of possible constructs includes for loops, try catch blocks, let, do bindings and so on. All predefined keywords maps into invocations of methods defined in a builder: Bind, Delay, Return, ReturnFrom, Run, Combine, For, TryFinally,TryWith, Using, While, Yield, YieldFrom, Zero. 
+This code is a copy from the great "Computation Expressions" series, I strongly recommend you to read it on a site [Fsharp for fun and profit](http://fsharpforfunandprofit.com/posts/computation-expressions-intro/). In computation expressions we could use syntax, which are very close to fsharp, but has different semantics defined by a builder. We can use a set of keywords, like let! from previous example, which is good enough to express any possible workflow. List of possible constructs includes for loops, try catch blocks, let/do bindings and so on. All predefined keywords maps into invocations of methods defined in a builder: Bind, Delay, Return, ReturnFrom, Run, Combine, For, TryFinally,TryWith, Using, While, Yield, YieldFrom, Zero. 
 For example if we define While method in our builder then we could use while loops inside the builder scope.
 {% highlight fsharp %}
 some { 
