@@ -1,7 +1,7 @@
 ---
 published: true
 layout: post
-title: Путь к computation expressions(Черновик).
+title: Путь к computation expressions.
 tags : [lessons, csharp, fsharp, monad]
 ---
 
