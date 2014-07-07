@@ -1,7 +1,7 @@
 ---
 published: true
 layout: post
-title: Решение реальной проблемы с помощью монад.
+title: Решение реальной проблемы с помощью монад(Черновик).
 tags : [lessons, csharp, fsharp, monad]
 ---
 
