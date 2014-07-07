@@ -1,7 +1,7 @@
 ---
 published: true
 layout: post
-title: Путь к computation expressions.
+title: Решение реальной проблемы с помощью монад.
 tags : [lessons, csharp, fsharp, monad]
 ---
 
