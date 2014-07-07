@@ -7,7 +7,7 @@ tags : [lessons, csharp, fsharp, monad]
 
 ## {{page.title}} [ENG]({{ site.url }}/2014/07/02/way-to-computation-expressions.html)
 
-<p class="meta">02 July 2014 &#8211; Karelia</p>
+<p class="meta">02 Июля 2014 &#8211; Карелия</p>
 
 *Русский вариант поста не исправляется, и возможно немного устарел, поэтому если вы видите явную ошибку, то гляньте [английскую версию]({{ site.url }}/2014/07/02/way-to-computation-expressions.html) вернее всего там она исправлена. У меня просто нет времени на синхронизацию исправлений между двумя версиями.*
 
