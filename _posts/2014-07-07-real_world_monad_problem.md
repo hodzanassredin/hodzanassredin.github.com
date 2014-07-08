@@ -9,9 +9,9 @@ tags : [lessons, csharp, fsharp, monad]
 
 <p class="meta">07 July 2014 &#8211; Karelia</p>
 
-After publication of first two posts, some readers complains that all samples are too artifical and don't show any advantages of monads. This post is an attempt to resolve that issue. We will discuss a real world problem and will use manads to solve it. 
+*After publication of first two posts, some readers complains that all samples are too artifical and don't show any advantages of monads. This post is an attempt to resolve that issue. We will discuss a real world problem and will use manads to solve it.* 
 
-Sometimes in applications we need to use long running workflow processes. Workflow execution can take a lot of time and has asynchronous nature. For example after document creation we must send email to a manager with a link to page for document publication. This is a very simple example, in real world apps workflows could be very complicated. Typical case is an internet store and workflow of purchase of goods  We have some ready to use solutions like Microsoft Workflow Foundation. But for some applications it is an overkill. In most applications we don't want to allow users to create and edit workflows. Lets try to implement our lightweight solution and in the beginning we will write requirments list.
+Sometimes in applications we need to use long running workflows. Workflow execution can take a lot of time and has asynchronous nature. For an example: after document creation we must send email to a manager with a link to a page for document publication. This is a very simple example, in real world apps workflows could be very complicated. Typical case is an internet store and workflow of purchase of goods. We have some ready to use solutions like Microsoft Workflow Foundation. But for some applications it is an overkill. Often we don't want to allow users to create and edit workflows and want to use very simple(for developers) solutions with all the power of static type checking. Lets write a requirments list.
 
 1. Workflow description should looks like a plain c# function.
 2. Workflow is a composition of activities and oother workflows.
@@ -185,19 +185,23 @@ class MainClass
 {% endhighlight %}
 GetResult method is the essence of our solution but it will not work in required way. lets exam that function and add descriptions of required behaviour. 
 {% highlight csharp %}
-//check if we alredy have result of execution, set it to "a" variable and continue function othervice break execution and return action. This line doesnt depends on any data.
 var a = Ask<int> ("enter a");
-//Behaviour is the same but it depends on previous result from "a" variable(we don't want to execute this lines in parallel).
+
+//check if we alredy have result of execution, set it to "a" variable and continue function execution othervice break execution and return action. This line doesnt depends on any data.
+
 var b = Ask<int> ("enter b");
-//this line should be executed as a standard c# code. 
-//We could add it to next "Show" line and use together. 
-//Behaviour the same as for Ask action but depends on Tuple(a,b)
+//Behaviour is the same, but it depends on previous result from "a" variable(we don't want to execute this lines in parallel).
+
 var res = a + b;
 Show ("Result= " + res);
-//simply return result and mark it as finished
+//first line should be executed as a standard c# code. 
+//We could add it to a second "Show" line and use together. 
+//Behaviour the same as for Ask action but depends on Tuple(a,b)
+
 return res;
+//simply return result and mark it as finished
 {% endhighlight %}
-Lets describe it in code.
+Now we can express it in a real code
 {% highlight csharp %}
 var a = Ask<int> ("enter a");
 if (!a.IsExecuted ()) {
@@ -216,7 +220,7 @@ if (!c.IsExecuted ()) {
 }
 return new WorkflowStep<WORKFLOWRESTYPE> (res){IsExecuted = true};;
 {% endhighlight %}
-We couuld wrap return boilerplate into a return fuction. But we can't wrap "if .. return .." constructions into some helper function. WContinuations to the rescue.  
+We could wrap return boilerplate into a return fuction, but we can't wrap "if .. return .." constructions into some helper function. Continuations to the rescue.  
 {% highlight csharp %}
 public class WorkflowStep<T>
 {
@@ -252,7 +256,7 @@ public class SumWorkflow:Workflow<int>
 	}
 }
 {% endhighlight %}
-Now everything is ok but it doesnt look as a plain c# function. Could we do better? Defenitely yes our return and bind functions is a monad pattern and as usual we can use linq syntactic sugare.
+Now everything is ok but it doesn't look like a plain c# function. Could we do better? Defenitely yes, our return and bind functions is a monad pattern and as usual we can use linq syntactic sugar.
 {% highlight csharp %}
 public static class WorkflowMonad
 {
@@ -294,7 +298,7 @@ public override WorkflowStep<int> GetResult ()
 	        select res;
 }
 {% endhighlight %}
-Now we should think how can we implement functions of IsExecuted and GetResult of WokflowStep class. We should store results of already executed lines in workflow. Lets incrementally assign line numbers on each Action creation and use List<String> as a storage for serialized results.
+We still don't know hot to implement IsExecuted and GetResult functions of a WokflowStep class. We should store somehow results of already executed lines in workflow. We can do it by incrementally assign line numbers on each Action creation and use List<String> as a storage for serialized results. We will use Execution context class which will be used to store executed lines results and keep current line index counter.
 {% highlight csharp %}
 public class ExecutionContext
 {
@@ -440,4 +444,6 @@ public class WorkflowComposition:Workflow<int>
 }
 {% endhighlight %}
 Hm seems that we meet all our requirments from the list.
-Now we could use this engine in console apps, asp.net applications. Do some cool SharePoint stuff. And monad pattern helps us to solve that problem in a beautiful way. We also can add support for oops, conditions([how]({{ site.url }}/2014/07/02/way-to-computation-expressions.html)), parallel eecution, transactions and what ever you want. [Full code](https://gist.github.com/hodzanassredin/e6b5e70a46201251629e) for this post.
+Now we could use this engine in console apps, asp.net applications or do some cool SharePoint stuff. And monad pattern helps us to solve that problem in a beautiful way. We also can add support for loops, conditions([how]({{ site.url }}/2014/07/02/way-to-computation-expressions.html)), parallel eecution, transactions and what ever you want. [Full code](https://gist.github.com/hodzanassredin/e6b5e70a46201251629e) for this post.
+P.S.
+Just imagine possibility to do computations over a database or web services without any IRepository, IService code bloat.
