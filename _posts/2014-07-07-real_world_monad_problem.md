@@ -14,7 +14,7 @@ Sometimes in applications we need to use long running workflows. Workflow execut
 1. Workflow description should looks like a plain c# function.
 2. Workflow is a composition of activities and other workflows.
 3. Activity describes what should be done in therms of domain model and should be represented as a POCO class.
-4. Workflow execution and translation of activities to a real code should not be done by a workflow but by some executor entity which is orthogonal to workflows.
+4. Workflow execution and translation of activities to a real code should not be done by a workflow, but by some executor entity which is orthogonal to workflows.
 5. Workflow serialisation should be easy and without black magic like serialisation of expression trees and enumerators.
 6. Ability to see current workflow state and all results of executed activities.  
 7. Ability to extend workflow engine by other features like timeouts, last activity undo and so on.
@@ -181,7 +181,7 @@ class MainClass
 	}
 }
 {% endhighlight %}
-GetResult method is the essence of our solution but it will not work in required way. lets exam that function and add descriptions of required behaviour. 
+GetResult method is the essence of our solution, but it will not work in required way. lets exam that function and add descriptions of required behaviour. 
 {% highlight csharp %}
 var a = Ask<int> ("enter a");
 //check if we alredy have result of execution, set it to "a" 
@@ -196,7 +196,7 @@ var res = a + b;
 Show ("Result= " + res);
 //first line should be executed as a standard c# code. 
 //We could add it to a second "Show" line and use together. 
-//Behaviour the same as for Ask action but depends on Tuple(a,b)
+//Behaviour the same as for Ask action, but depends on Tuple(a,b)
 
 return res;
 //simply return result and mark it as finished
@@ -256,7 +256,7 @@ public class SumWorkflow:Workflow<int>
 	}
 }
 {% endhighlight %}
-Now everything is ok but it doesn't look like a plain c# function. Could we do better? Definitely yes, our return and bind functions is a monad pattern and as usual we can use linq syntactic sugar.
+Now everything is ok, but it doesn't look like a plain c# function. Could we do better? Definitely yes, our return and bind functions is a monad pattern and as usual we can use linq syntactic sugar.
 {% highlight csharp %}
 public static class WorkflowMonad
 {
