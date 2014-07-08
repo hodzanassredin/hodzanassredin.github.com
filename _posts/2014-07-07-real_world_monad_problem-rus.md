@@ -123,17 +123,33 @@ public class WorkflowStep<T>
 		...
 	}
 }
+public abstract class Workflow<TB>
+{
+	protected WorkflowStep<T> Do<T> (Action act)
+	{
+		var step = new WorkflowStep<T> (act);
+		return step;
+	}
+
+	protected WorkflowStep<T> Ask<T> (String what)
+	{
+		return Do<T> (new Ask<T> (){ What = what });
+	}
+
+	protected WorkflowStep<Unit> Show (String what)
+	{
+		return Do<Unit> (new Show (){ What = what });
+	}
+
+	public abstract WorkflowStep<TB> GetResult ();
+}
 public class SumWorkflow:Workflow<int>
 {
 	public SumWorkflow ()
 	{
 		
 	}
-
-	public SumWorkflow (ExecutionContext context) : base (context)
-	{
-	}
-	// pseudo c# code
+	// not correct c# code
 	public override WorkflowStep<int> GetResult ()
 	{
 		var a = Ask<int> ("enter a");
@@ -170,18 +186,261 @@ class MainClass
 	}
 }
 {% endhighlight %}
-
+GetResult method is the essence of our solution but it will not work in required way. lets exam that function and add descriptions of required behaviour. 
 {% highlight csharp %}
+//check if we alredy have result of execution, set it to "a" variable and continue function othervice break execution and return action. This line doesnt depends on any data.
+var a = Ask<int> ("enter a");
+//Behaviour is the same but it depends on previous result from "a" variable(we don't want to execute this lines in parallel).
+var b = Ask<int> ("enter b");
+//this line should be executed as a standard c# code. 
+//We could add it to next "Show" line and use together. 
+//Behaviour the same as for Ask action but depends on Tuple(a,b)
+var res = a + b;
+Show ("Result= " + res);
+//simply return result and mark it as finished
+return res;
 {% endhighlight %}
-
+Lets describe it in code.
 {% highlight csharp %}
+var a = Ask<int> ("enter a");
+if (!a.IsExecuted ()) {
+	return new WorkflowStep<WORKFLOWRESTYPE> (a.Action);
+}
+var aValue = a.GetValue ();
+var b = Ask<int> ("enter b");
+if (!b.IsExecuted ()) {
+	return new WorkflowStep<WORKFLOWRESTYPE> (b.Action);
+}
+var bValue = b.GetValue ();
+var res = aValue + bValue;
+var c = Show ("Result= " + res);
+if (!c.IsExecuted ()) {
+	return new WorkflowStep<WORKFLOWRESTYPE> (c.Action);
+}
+return new WorkflowStep<WORKFLOWRESTYPE> (res){IsExecuted = true};;
 {% endhighlight %}
-
+We couuld wrap return boilerplate into a return fuction. But we can't wrap "if .. return .." constructions into some helper function. WContinuations to the rescue.  
 {% highlight csharp %}
-{% endhighlight %}
+public class WorkflowStep<T>
+{
+	...
+	public WorkflowStep<TB> Bind<TB> (Func<T,WorkflowStep<TB>> f)
+	{
+		if (this.IsExecuted ()) {
+			return f (this.GetValue ());
+		}
+		return new WorkflowStep<TB> (this.Action, this.Context, this.Index);
+	}
 
-{% highlight csharp %}
-{% endhighlight %}
+	public static WorkflowStep<TB> Return<TB> (TB x)
+	{
+		return new WorkflowStep<TB> (x);
+	}
+}
 
-{% highlight csharp %}
+public class SumWorkflow:Workflow<int>
+{
+	public override WorkflowStep<int> GetResult ()
+	{
+		Ask<int> ("enter a").Bind(
+			a=> Ask<int> ("enter b").Bind(
+				b=>{
+					var res = a + b;
+					return Show ("Result= " + res).Bind(
+						unit => unit.Return(res)
+					);			
+				}
+			)
+		);
+	}
+}
 {% endhighlight %}
+Now everything is ok but it doesnt look as a plain c# function. Could we do better? Defenitely yes our return and bind functions is a monad pattern and as usual we can use linq syntactic sugare.
+{% highlight csharp %}
+public static class WorkflowMonad
+{
+	public static WorkflowStep<T> Return<T> (this T value)
+	{
+		return new WorkflowStep<T> (value);
+	}
+
+	public static WorkflowStep<U> Bind<T, U> (this WorkflowStep<T> m, Func<T, WorkflowStep<U>> k)
+	{
+		if (m.IsExecuted ()) {
+			return k (m.GetValue ());
+		}
+		return new WorkflowStep<U> (m.Action);
+	}
+
+	public static WorkflowStep<V> SelectMany<T, U, V> (
+		this WorkflowStep<T> id,
+		Func<T, WorkflowStep<U>> k,
+		Func<T, U, V> s)
+	{
+		return id.Bind (x => k (x).Bind (y => s (x, y).Return ()));
+	}
+
+	public static WorkflowStep<B> Select<A, B> (this WorkflowStep<A> a, Func<A, B> select)
+	{
+		return a.Bind (aval => WorkflowMonad.Return (select (aval)));
+	}
+}
+{% endhighlight %}
+Now we could rewrite our workflow function.
+{% highlight csharp %}
+public override WorkflowStep<int> GetResult ()
+{
+	return 	from a in Ask<int> ("enter a")
+	        from b in Ask<int> ("enter b")
+	        let res = a + b
+	        from u in Show ("Result= " + res)
+	        select res;
+}
+{% endhighlight %}
+Now we should think how can we implement functions of IsExecuted and GetResult of WokflowStep class. We should store results of already executed lines in workflow. Lets incrementally assign line numbers on each Action creation and use List<String> as a storage for serialized results.
+{% highlight csharp %}
+public class ExecutionContext
+{
+	public ExecutionContext ()
+	{
+		Memory = new List<string> ();
+	}
+
+	public List<string> Memory {
+		get;
+		set;
+	}
+
+	public int Index {
+		get;
+		private set;
+	}
+
+	public void Restart ()
+	{
+		Index = 0;
+	}
+
+	public void Inc ()
+	{
+		Index = Index + 1;
+	}
+}
+
+public static class SerializationHelpers
+{
+	public static T ParseValue<T> (this string json)
+	{
+		return JsonConvert.DeserializeObject<T> (json);
+	}
+
+	public static string ValueToString<T> (this T value)
+	{
+		return JsonConvert.SerializeObject (value);
+	}
+}
+{% endhighlight %}
+Now we must add context into Workflow and WokflowStep classes
+{% highlight csharp %}
+public class WorkflowStep<T>
+{
+	public WorkflowStep (Action act, ExecutionContext context, int index)
+	{
+		Action = act;
+		Context = context;
+		Index = index;
+	}
+
+	public WorkflowStep (T value)
+	{
+		Context.Memory.Add (value.ValueToString ());
+	}
+
+	public ExecutionContext Context = new ExecutionContext ();
+
+	public bool IsExecuted ()
+	{
+		return (this.Index) < Context.Memory.Count;
+	}
+
+	public T GetValue ()
+	{
+		return Context.Memory [this.Index].ParseValue<T> ();
+	}
+
+	public int Index {
+		get;
+		set;
+	}
+}
+public abstract class Workflow<TB>
+{
+	public Workflow ()
+	{
+		Context = new ExecutionContext ();
+	}
+
+	public Workflow (ExecutionContext ctx)
+	{
+		Context = ctx;
+		IsSubWorkflow = true;
+	}
+
+	public bool IsSubWorkflow {
+		get;
+		set;
+	}
+
+	public ExecutionContext Context {
+		get;
+		set;
+	}
+
+	protected WorkflowStep<T> Do<T> (Action act)
+	{
+		var step = new WorkflowStep<T> (act, Context, Context.Index);
+		Context.Inc ();
+		return step;
+	}
+
+	protected WorkflowStep<T> Ask<T> (String what)
+	{
+		return Do<T> (new Ask<T> (){ What = what });
+	}
+
+	protected WorkflowStep<Unit> Show (String what)
+	{
+		return Do<Unit> (new Show (){ What = what });
+	}
+
+	public abstract WorkflowStep<TB> GetResultInt ();
+
+	public WorkflowStep<TB> GetResult ()
+	{
+		if (!IsSubWorkflow)
+			Context.Restart ();
+		return GetResultInt ();
+	}
+
+	public void AddResult (object val)
+	{
+		Context.Memory.Add (val.ValueToString ());
+	}
+}
+{% endhighlight %}
+We have done. Lets see some composable workflow in action.
+{% highlight csharp %}
+public class WorkflowComposition:Workflow<int>
+{
+	public override WorkflowStep<int> GetResultInt ()
+	{
+		return 	from a in new SumWorkflow (Context).GetResult ()
+		        from b in new SumWorkflow (Context).GetResult ()
+		        let res = a + b
+		        from v in Show ("Result of two = " + (a + b))
+		        select a + b;
+	}
+}
+{% endhighlight %}
+Hm seems that we meet all our requirments from the list.
+Now we could use this engine in console apps, asp.net applications. Do some cool SharePoint stuff. And monad pattern helps us to solve that problem in a beautiful way. We also can add support for oops, conditions([how]({{ site.url }}/2014/07/02/way-to-computation-expressions.html)), parallel eecution, transactions and what ever you want.
