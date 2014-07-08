@@ -9,6 +9,8 @@ tags : [lessons, csharp, monad]
 
 <p class="meta">25 June 2014 &#8211; Karelia</p>
 
+*After publication of this post, some readers complain that example are too artificial and don't show any advantages of monads. So if you want more interesting, but also more complicated example then you could read [this]({{ site.url }}/2014/07/07/real_world_monad_problem.html) post and after that return here* 
+
 During migration of a small project to fsharp, I thought a lot about using monads in practice. Subject fascinated me enough and I decided to describe my experience in a couple of posts. Unfortunately all the material demanded decent knowledge of monads and monad transformers, at the same time I wanted to make a material without any links to external materials, without a lot of words and simple for ordinary programmers who are not burdened by the knowledge of mathematics and  syntax of some functional programming language. Thus was born the idea to write another explanation of what is a monad. Since this post is aimed at programmers, and it will be approached by code and not by the text or mathematics. Ready? Let's go.
 
 Lets look at some simple code:
