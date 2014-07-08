@@ -183,7 +183,6 @@ class MainClass
 GetResult method is the essence of our solution but it will not work in required way. lets exam that function and add descriptions of required behaviour. 
 {% highlight csharp %}
 var a = Ask<int> ("enter a");
-
 //check if we alredy have result of execution, set it to "a" 
 //variable and continue function execution othervice break 
 //execution and return action. This line doesn’t depend on any data.
