@@ -184,10 +184,13 @@ GetResult method is the essence of our solution but it will not work in required
 {% highlight csharp %}
 var a = Ask<int> ("enter a");
 
-//check if we alredy have result of execution, set it to "a" variable and continue function execution othervice break execution and return action. This line doesn’t depend on any data.
+//check if we alredy have result of execution, set it to "a" 
+//variable and continue function execution othervice break 
+//execution and return action. This line doesn’t depend on any data.
 
 var b = Ask<int> ("enter b");
-//Behaviour is the same, but it depends on previous result from "a" variable(we don't want to execute this lines in parallel).
+//Behaviour is the same, but it depends on previous result from "a" variable
+//(we don't want to execute this lines in parallel).
 
 var res = a + b;
 Show ("Result= " + res);
