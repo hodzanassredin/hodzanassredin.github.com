@@ -21,8 +21,7 @@ Sometimes in applications we need to use long running workflows. Workflow execut
 6. Ability to see current workflow state and all results of executed activities.  
 7. Ability to extend workflow engine by other features like timeouts, last activity undo and so on.
 
-Lets start and define command classes.
-
+Lets start and define classes of activities.
 {% highlight csharp %}
 public class Action
 {
@@ -73,10 +72,10 @@ public class Storage
 	}
 }
 {% endhighlight %}
-Very simple helper class which serealize and deserialize objects to json on file system and vice versa. Now we should define workflow clas. We probably will use workflow in this way:
+Very simple helper class which serealize and deserialize objects to json on file system and vice versa. Now we should define workflow class. We probably will use workflow in this way:
 
 1. Define a workflow
-1. Create the workflow, probably with some params.
+1. Create the workflow instance, probably with some params.
 2. Invoke Execute Method
 3. Check result, it could be some activity for execution or final result. In case of final result we can stop but in other case we should do some asked activity.
 4. Save workflow into storage.

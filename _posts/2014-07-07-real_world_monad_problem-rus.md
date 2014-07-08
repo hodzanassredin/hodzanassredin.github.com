@@ -24,13 +24,13 @@ tags : [lessons, csharp, fsharp, monad]
 6. Возможность просмотра текущего состояния процесса и всех его выполненных шагов.  
 7. Легость добавления новых возможностей. Например отмена последней осуществленной активности, таймауты и т. д.
 
-Lets start and define command classes.
+Для начала определим классы активностей.
 
 {% highlight csharp %}
 public class Action
 {
 }
-//show some text to user
+//показать текст пользователю
 public class Show : Action
 {
 	public string What {
@@ -38,7 +38,7 @@ public class Show : Action
 		set;
 	}
 }
-//show some text to aser and ask a value of specified type
+//показать текст пользователю и спросить значение определенного типа
 public class Ask<T> : Action
 {
 	public string What {
@@ -47,8 +47,8 @@ public class Ask<T> : Action
 	}
 }
 {% endhighlight %}
-Action is a base class for all activities. Ask and Show just two examples of concrete activities. So far so good.
-Next stop is a storage class.
+Action это базовый класс для всех активностей. Ask и Show просто два примера конкретных активностей. Пока все просто.
+Теперь определим стратегию сохранения процессов.
 {% highlight csharp %}
 public class Storage
 {
@@ -76,16 +76,16 @@ public class Storage
 	}
 }
 {% endhighlight %}
-Very simple helper class which serealize and deserialize objects to json on file system and vice versa. Now we should define workflow clas. We probably will use workflow in this way:
+Очень простой вспомогательный класс который сериализует обьекты в json и сохраняет в текстовый файл и также делает обратную операцию. Теперь определим класс процесса и шага процесса. Вернее всего мы будем использовать процессы примерно так:
 
-1. Define a workflow
-1. Create the workflow, probably with some params.
-2. Invoke Execute Method
-3. Check result, it could be some activity for execution or final result. In case of final result we can stop but in other case we should do some asked activity.
-4. Save workflow into storage.
-5. On activity response load workflow from storage and set result.
-6. Go to step 2. 
-Lets descibe it in code and specify behaviour of Ask and Show commands.
+1. Определить процесс
+1. Создать экземпляр процессаCreate the workflow, probably with some params.
+2. Вызвать метод Execute
+3. Проверить результат, он может содержать конечный результат или активность для исполнения. В случае с результатом мы можем закончить исполнение но в другом случае мы должны выполнить запрашиваемую активность.
+4. Сохранить процесс в хранилищe.
+5. При получении результата от активности загрузить процесс из хранилища и добавить результат.
+6. Перейти к шагу 2. 
+Давайте опишем это в коде и определим поведение команд Ask и Show.
 {% highlight csharp %}
 public class Unit//no result object
 {
@@ -149,7 +149,7 @@ public class SumWorkflow:Workflow<int>
 	{
 		
 	}
-	// not correct c# code
+	// не корректный код
 	public override WorkflowStep<int> GetResult ()
 	{
 		var a = Ask<int> ("enter a");
@@ -186,21 +186,25 @@ class MainClass
 	}
 }
 {% endhighlight %}
-GetResult method is the essence of our solution but it will not work in required way. lets exam that function and add descriptions of required behaviour. 
+Метод GetResult это суть нашего решения но в данный момент он не работает. Давайте посмотрим на этот метод внимательней и опишем поведение каждой строки. 
 {% highlight csharp %}
-//check if we alredy have result of execution, set it to "a" variable and continue function othervice break execution and return action. This line doesnt depends on any data.
 var a = Ask<int> ("enter a");
-//Behaviour is the same but it depends on previous result from "a" variable(we don't want to execute this lines in parallel).
+
+//проверить если уже существует результат выполнение активности присвоить его переменной "а" и продолжить выполнение, если результата нет то прервать выполнение и вернуть необходимую активность. Эта линия не зависит от ранее вычисленных результатов.
+
 var b = Ask<int> ("enter b");
-//this line should be executed as a standard c# code. 
-//We could add it to next "Show" line and use together. 
-//Behaviour the same as for Ask action but depends on Tuple(a,b)
+//Поведение тоже но линия зависит от предыдущего результата "a" (мы не хотим исполныть эти линни параллельно).
+
 var res = a + b;
 Show ("Result= " + res);
-//simply return result and mark it as finished
+//Первая линия должна быть выполнена как обычный код c#. 
+//Мы можем добавить ее ко второй "Show" линии и рассматривать вместе. 
+//Поведение тоже как у активности Ask но зависит от Tuple(a,b)
+
 return res;
+//просто вернуть результат маркировать его как вычисленный
 {% endhighlight %}
-Lets describe it in code.
+Теперь мы можем выразить это в реальном коде.
 {% highlight csharp %}
 var a = Ask<int> ("enter a");
 if (!a.IsExecuted ()) {
@@ -219,7 +223,7 @@ if (!c.IsExecuted ()) {
 }
 return new WorkflowStep<WORKFLOWRESTYPE> (res){IsExecuted = true};;
 {% endhighlight %}
-We couuld wrap return boilerplate into a return fuction. But we can't wrap "if .. return .." constructions into some helper function. WContinuations to the rescue.  
+Мы можем убрать код возвращения в специальную функцию return, но мы не можем убрать "if .. return .." в какую либо функцию. Континуации во спасение наших душ.  
 {% highlight csharp %}
 public class WorkflowStep<T>
 {
@@ -255,7 +259,7 @@ public class SumWorkflow:Workflow<int>
 	}
 }
 {% endhighlight %}
-Now everything is ok but it doesnt look as a plain c# function. Could we do better? Defenitely yes our return and bind functions is a monad pattern and as usual we can use linq syntactic sugare.
+Теперь все компилиться но это не выглядит как обычная функция c#. Можем ли мы сделать это лучше? Определенно да, наши функции return и bind это паттерн монады и мы может как и прежде добавить синтаксический сахар linq.
 {% highlight csharp %}
 public static class WorkflowMonad
 {
@@ -286,7 +290,7 @@ public static class WorkflowMonad
 	}
 }
 {% endhighlight %}
-Now we could rewrite our workflow function.
+Теперь мы можем переписать нашу функцию определения процесса.
 {% highlight csharp %}
 public override WorkflowStep<int> GetResult ()
 {
@@ -297,7 +301,7 @@ public override WorkflowStep<int> GetResult ()
 	        select res;
 }
 {% endhighlight %}
-Now we should think how can we implement functions of IsExecuted and GetResult of WokflowStep class. We should store results of already executed lines in workflow. Lets incrementally assign line numbers on each Action creation and use List<String> as a storage for serialized results.
+Мы все ще не знаем как написать функции IsExecuted и GetResult класса WokflowStep. Мы должны где то сохранять рузультаты уже выполненных активностей. Мы можем инкрементно присваивать номера линий на каждое создание активностей и использовать List<String> как хранилище сериализованных результатов. Мы будем использовать класс ExecutionСontext который будет использован как харнилище результатов и хранити и текущий номер исполняемой строки.
 {% highlight csharp %}
 public class ExecutionContext
 {
@@ -340,7 +344,7 @@ public static class SerializationHelpers
 	}
 }
 {% endhighlight %}
-Now we must add context into Workflow and WokflowStep classes
+Теперь мы должны добавить контекст в классы Workflow и WokflowStep.
 {% highlight csharp %}
 public class WorkflowStep<T>
 {
@@ -428,7 +432,7 @@ public abstract class Workflow<TB>
 	}
 }
 {% endhighlight %}
-We have done. Lets see some composable workflow in action.
+Сделано. Теперь мы можем варазить композицию процессов.
 {% highlight csharp %}
 public class WorkflowComposition:Workflow<int>
 {
@@ -442,5 +446,7 @@ public class WorkflowComposition:Workflow<int>
 	}
 }
 {% endhighlight %}
-Hm seems that we meet all our requirments from the list.
-Now we could use this engine in console apps, asp.net applications. Do some cool SharePoint stuff. And monad pattern helps us to solve that problem in a beautiful way. We also can add support for oops, conditions([how]({{ site.url }}/2014/07/02/way-to-computation-expressions.html)), parallel eecution, transactions and what ever you want. [Full code](https://gist.github.com/hodzanassredin/e6b5e70a46201251629e) for this post.
+Чтож похоже мы смогли удовлетворить всем наши требования из списка.
+Теперь мы можем исползовать этот движок дв консольных приложениях, asp.net сайтах или извращаться с SharePoint. И поаттерн монады помог нам решить эту проблему без особых костылей. Мы также можем добавить поддержку для циклов, условий([как]({{ site.url }}/2014/07/02/way-to-computation-expressions-rus.html)), паралллельного исполнения, транзакций и многого другого. [Полный код](https://gist.github.com/hodzanassredin/e6b5e70a46201251629e) для этого поста.
+P.S.
+Просто вообразите возможность запускать вычисления поверх баз данных или веб сервисов без идиотских IRepository, IService и т.п.
