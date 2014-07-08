@@ -1,28 +1,25 @@
 ---
 published: true
 layout: post
-title: Решение реальной проблемы с помощью монад(Черновик).
+title: Real world problem for monad(Draft).
 tags : [lessons, csharp, fsharp, monad]
 ---
 
-## {{page.title}} [ENG]({{ site.url }}/2014/07/07/real_world_monad_problem.html)
+## {{page.title}} [RUS]({{ site.url }}/2014/07/07/real_world_monad_problem-rus.html)
 
-<p class="meta">07 Июля 2014 &#8211; Карелия</p>
+<p class="meta">07 July 2014 &#8211; Karelia</p>
 
-*Русский вариант поста не исправляется, и возможно немного устарел, поэтому если вы видите явную ошибку, то гляньте [английскую версию]({{ site.url }}/2014/07/07/real_world_monad_problem.html) вернее всего там она исправлена. У меня просто нет времени на синхронизацию исправлений между двумя версиями.*
+After publication of first two posts, some readers complains that all samples are too artifical and don't show any advantages of monads. This post is an attempt to resolve that issue. We will discuss a real world problem and will use manads to solve it. 
 
-После публикации первых двух постов некоторые читатели мнение что все примеры с монадами немного надуманные и не показывают какого либо преимущества перед простым кодом с повторениями. Чтож попытаемся исправить это упущение. Давайте опишем проблему приближенную к реальности.
+Sometimes in applications we need to use long running workflow processes. Workflow execution can take a lot of time and has asynchronous nature. For example after document creation we must send email to a manager with a link to page for document publication. This is a very simple example, in real world apps workflows could be very complicated. Typical case is an internet store and workflow of purchase of goods  We have some ready to use solutions like Microsoft Workflow Foundation. But for some applications it is an overkill. In most applications we don't want to allow users to create and edit workflows. Lets try to implement our lightweight solution and in the beginning we will write requirments list.
 
-#Проблема.
-Иногда в приложениях нам необходимо создавать рабочие процессы. Исполнение которых занимает продолжительное время. Например после создания документа отправить письмо менеджеру с сылкой на подтверждение публикации. Это самый простой пример, в реальном мире рабочие процессы могут быть черезвычайно сложны. В веб приложениях оипичный пример при оформление покупок в интернет магазине. На рынке существуют различные готовые решения этой проблемы например Microsoft Workflow Foundation. Но для некоторых задач это явный оверкил. В большинстве приложений не требуется позволять пользователям создавать и редактировать свои кастомные процессы. Давйте же попробуем написать свое легковесное решение. Для начала определим список требований.
-
-1. Описание Процесса должно быть похоже на простую функцию.
-2. Процессы это композиция других процессов и активностей.
-3. Активность описывающия что должно быть сделано в терминах доменной модели должна быть простым POCO классом.
-4. Конкретный код который будет исполнять активности и процессы должен быть определен вне процесса, в сущности под названием Исполнитель.
-5. Сохранине и серилизация Процесса должно быть легко реализуемо.
-6. Возможность просмотра текущего состояния процесса и всех его выполненных шагов.  
-7. Легость добавления новых возможностей. Например отмена последней осуществленной активности, таймауты и т. д.
+1. Workflow description should looks like a plain c# function.
+2. Workflow is a composition of activities and oother workflows.
+3. Activity describes what should be done in therms of domain model and should be represented as a POCO class.
+4. Workflow execution and translation of activities to a real code should not be done by a workflow but by some executor entity which is orthogonal to workflows.
+5. Workflow serialization should be easy and without black magic like serialization of expression trees and enumerators.
+6. Ability to see current workflow state and all results of executed activities.  
+7. Ability to extend workflow engine by other features like timeouts, last activity undo and so on.
 
 Lets start and define command classes.
 
