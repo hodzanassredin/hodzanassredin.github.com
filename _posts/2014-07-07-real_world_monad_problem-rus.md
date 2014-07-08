@@ -265,7 +265,9 @@ public static class WorkflowMonad
 		return new WorkflowStep<T> (value);
 	}
 
-	public static WorkflowStep<U> Bind<T, U> (this WorkflowStep<T> m, Func<T, WorkflowStep<U>> k)
+	public static WorkflowStep<U> Bind<T, U> (
+		this WorkflowStep<T> m, 
+		Func<T, WorkflowStep<U>> k)
 	{
 		if (m.IsExecuted ()) {
 			return k (m.GetValue ());
@@ -281,7 +283,9 @@ public static class WorkflowMonad
 		return id.Bind (x => k (x).Bind (y => s (x, y).Return ()));
 	}
 
-	public static WorkflowStep<B> Select<A, B> (this WorkflowStep<A> a, Func<A, B> select)
+	public static WorkflowStep<B> Select<A, B> (
+		this WorkflowStep<A> a, 
+		Func<A, B> select)
 	{
 		return a.Bind (aval => WorkflowMonad.Return (select (aval)));
 	}
