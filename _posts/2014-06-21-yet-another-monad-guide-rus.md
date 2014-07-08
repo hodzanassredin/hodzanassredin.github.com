@@ -131,7 +131,7 @@ class Test
 }
 public static void Test(){
 	Defend2(new Test(), a=>a.Text());
-	// System.Object does not contain a defenition for Text
+	// System.Object does not contain a definition for Text
 }
 {% endhighlight %}
 Попробуем обойти эту проблемы с помощью переменных типа. 
