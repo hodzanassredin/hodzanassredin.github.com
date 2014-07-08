@@ -70,15 +70,16 @@ public class Storage
 	}
 }
 {% endhighlight %}
-Very simple helper class which serialise objects to json on file system and vice versa. Now we should define workflow class. We probably will use workflow in this way:
+Very simple helper class which serialise objects to json on a file system and vice versa. Now we should define workflow class. We probably will use workflow in this way:
 
 1. Define a workflow
 1. Create the workflow instance, probably with some params.
 2. Invoke Execute Method
-3. Check result, it could be some activity for execution or final result. In case of final result we can stop but in other case we should do some asked activity.
+3. Check result, it could be some activity for execution or final result. In case of final result we can stop, but in other case we should do some asked activity.
 4. Save workflow into storage.
 5. On activity response load workflow from storage and set result.
-6. Go to step 2. 
+6. Go to step 2
+
 Lets describe it in code and specify behaviour of Ask and Show commands.
 {% highlight csharp %}
 public class Unit//no result object
