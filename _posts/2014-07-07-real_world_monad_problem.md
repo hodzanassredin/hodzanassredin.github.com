@@ -9,12 +9,12 @@ tags : [lessons, csharp, fsharp, monad]
 
 <p class="meta">07 July 2014 &#8211; Karelia</p>
 
-Sometimes in applications we need to use long running workflows. Workflow execution can take a lot of time and has asynchronous nature. For an example: after document creation we must send email to a manager with a link to a page for document publication. This is a very simple example, in real world apps workflows could be very complicated. Typical case is an internet store and workflow of purchase of goods. We have some ready to use solutions like Microsoft Workflow Foundation. But for some applications it is an overkill. Often we don't want to allow users to create and edit workflows and want to use very simple(for developers) solutions with all the power of static type checking. Lets write a requirements list.
+Sometimes we need to use long running workflows in our applications. Workflow execution can take a lot of time and has asynchronous nature. For an example: after document creation we must send email to a manager, with a link to a page for document publication. This is a very simple example, in real world apps workflows could be very complicated. Typical case is an internet store and workflow of purchase of goods. We have some ready to use solutions like Microsoft Workflow Foundation. But for some applications it is an overkill. Often we don't want to allow users to create and edit workflows and want to use very simple(for developers) solutions, with all the power of static type checking. Lets write a requirements list.
 
 1. Workflow description should looks like a plain c# function.
 2. Workflow is a composition of activities and other workflows.
 3. Activity describes what should be done in therms of domain model and should be represented as a POCO class.
-4. Workflow execution and translation of activities to a real code should not be done by a workflow, but by some executor entity which is orthogonal to workflows.
+4. Workflow execution and translation of activities to a real code should not be done by a workflow, but by some executor entity,which is orthogonal to workflows.
 5. Workflow serialisation should be easy and without black magic like serialisation of expression trees and enumerators.
 6. Ability to see current workflow state and all results of executed activities.  
 7. Ability to extend workflow engine by other features like timeouts, last activity undo and so on.
@@ -70,14 +70,14 @@ public class Storage
 	}
 }
 {% endhighlight %}
-Very simple helper class which serialise objects to json on a file system and vice versa. Now we should define workflow class. We probably will use workflow in this way:
+Very simple helper class, which serialises objects to json on a file system and vice versa. Now we should define workflow class. We probably will use workflows in this way:
 
 1. Define a workflow
 1. Create the workflow instance, probably with some params.
 2. Invoke Execute Method
-3. Check result, it could be some activity for execution or final result. In case of final result we can stop, but in other case we should do some asked activity.
+3. Check result, it could be some activity for execution or final result. In case of final result we can stop, but in other case we should execute returned activity.
 4. Save workflow into storage.
-5. On activity response load workflow from storage and set result.
+5. On activity response, load workflow from storage and add a result.
 6. Go to step 2
 
 Lets describe it in code and specify behaviour of Ask and Show commands.
@@ -181,11 +181,11 @@ class MainClass
 	}
 }
 {% endhighlight %}
-GetResult method is the essence of our solution, but it will not work in required way. lets exam that function and add descriptions of required behaviour. 
+GetResult method is the essence of our solution, but it will not work in required way. Lets exam that function line by line and add descriptions of required behaviour. 
 {% highlight csharp %}
 var a = Ask<int> ("enter a");
-//check if we alredy have result of execution, set it to "a" 
-//variable and continue function execution othervice break 
+//check if we alredy have result of of this action, set it to "a" 
+//variable and continue execution, othervice break 
 //execution and return action. This line doesn’t depend on any data.
 
 var b = Ask<int> ("enter b");
@@ -302,7 +302,7 @@ public override WorkflowStep<int> GetResult ()
 	        select res;
 }
 {% endhighlight %}
-We still don't know hot to implement IsExecuted and GetResult functions of a WokflowStep class. We should store somehow results of already executed lines in workflow. We can do it by incrementally assign line numbers on each Action creation and use List<String> as a storage for serialised results. We will use Execution context class which will be used to store executed lines results and keep current line index counter.
+We still don't know hot to implement IsExecuted and GetResult functions of a WokflowStep class. We should store, somehow, results of already executed activities in workflow. We can do it by incrementally assign numbers to activities on each Action creation and use List<String> as a storage for serialised results. We will use Execution context class which will be used to store results of executed actions and keep current action index counter.
 {% highlight csharp %}
 public class ExecutionContext
 {
@@ -447,7 +447,7 @@ public class WorkflowComposition:Workflow<int>
 	}
 }
 {% endhighlight %}
-Hm seems that we meet all our requirements from the list.
+Hm, seems that we meet all our requirements from the list.
 Now we could use this engine in console apps, asp.net applications or do some cool SharePoint stuff. And monad pattern helps us to solve that problem in a beautiful way. We also can add support for loops, conditions([how]({{ site.url }}/2014/07/02/way-to-computation-expressions.html)), parallel execution, transactions and what ever you want. [Full code](https://gist.github.com/hodzanassredin/e6b5e70a46201251629e) for this post.
 P.S.
 Just imagine possibility to do computations over a database or web services without any IRepository, IService code bloat.
