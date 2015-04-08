@@ -35,23 +35,23 @@ It is a definitely way to go. It can reduce a lot of bugs and simplifies your co
 
 #Monads and computation expressions
 
-Monads is very hard to understand for novice devs and they do not compose. So try to avoid creation of your own monads and use predefined ones of from libs. Develop your own only when you really need it.
+Monads is very hard to understand for novice devs and they do not compose. So try to avoid creation of your own monads and use predefined ones or from libs. Develop your own only when you really need it.
 
 #Automatic generation of Equals, GetHashCode and so on.
 
-Outstanding feature of the language. Current version have some performance issues but it will be fixed in next versions of fsharp by different compilation providers.
+Outstanding feature of the language. Current version have some performance issues, but it will be fixed in next versions of fsharp by different compilation providers.
 
 #Collections
 
-Inconsistent api for different collections (fixed in F# 4) causes dramatic time loss in developing. Missing of some really useful methods like OrderByDescending (fixed in f# 4) can show you a lot of interesting stuff during debugging of production server :). No built in generic performant solution for collections. Seq module is too slow. Currently you can use perfect Fsharp streams or some kind of Reducers library. Hope some of them will be integrated into next versions of csharp and fsharp like clojure do. 
+Inconsistent api for different collections (fixed in F# 4) causes dramatic time loss in developing. Missing of some really useful methods like OrderByDescending (fixed in f# 4) can show you a lot of interesting stuff during debugging on production server :). No built in generic performant solution for collections. Seq module is too slow. Currently you can use perfect Fsharp streams lib or some kind of Reducers library. Hope some of them will be integrated into next versions of csharp and fsharp like clojure do. 
 
 #Fsharp idiomatic libs
 
-Unfortunately after some use we decided to switch to better tested production ready libs. They are not so idiomatic but easier to work form both fsharp and csharp.
+Unfortunately after some use we decided to switch to better tested production ready libs. They are not so idiomatic, but easier to work form both fsharp and csharp.
 
 #Type inference.
 
-After some time almost zero problems but you nee to understand limitations like F# does not allow type constraints involving two different type parameters.
+After some time almost zero problemsб, but you need to understand limitations like: F# does not allow type constraints involving two different type parameters.
 
 #OOP support
 
