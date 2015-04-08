@@ -51,7 +51,7 @@ Unfortunately after some use we decided to switch to better tested production re
 
 #Type inference.
 
-After some time almost zero problemsб, but you need to understand limitations like: F# does not allow type constraints involving two different type parameters.
+After some time almost zero problems, but you need to understand limitations like: F# does not allow type constraints involving two different type parameters.
 
 #OOP support
 
