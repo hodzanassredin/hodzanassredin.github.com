@@ -1,3 +1,14 @@
+---
+published: true
+layout: post
+title: FSharp for middle size projects.
+tags : [csharp, fsharp, monad, js]
+---
+
+## {{page.title}}
+
+<p class="meta">08 April 2015 &#8211; Karelia</p>
+
 Fsharp and real world project.
 I spent some time with Fsharp on a full time job and have some thoughts to share. We creates some ml oriented stuff and have code in c#, js, fsharp. So have a lot of interoperability between languages. Unfortunately I don't remember some real world cases and examples for some points. 
 DISCLAIMER: This is just my humble opinion and I do not pretend to have the only truth. 
