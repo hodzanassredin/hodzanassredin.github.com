@@ -345,10 +345,154 @@ public BaseMessage BuildClassificatioonMessage(Address responseReciever, string 
 We build some code which allows us to express distributed computations for azure platform. Very interesting but now we have ability to use Microservices pattern. You can read more here http://microservices.io/patterns/microservices.html. We can decompose our alghorithms into small pieces and they could be deployed separately without breaking currently executed pipelines. This system described above have a lot of problems which are really difficult to solve.  With all that hype about Microserices I read a lot of articles and unfortunately fournd no answers to my questions.
 Lets start from our solution description. Our solution has possibility to express only SEQUENTIAL pipelines with a primitive error handling. Thats all. No possibility to express cancellation, loops, if conditions and other controlflow operators, fork/join parallelization, . Ad even with only sequential pipelines it is pretty damn hard to use. 
 1. It is hard to test. You can easilliy test pieces but really difficult to abstract full execution context.
-2. It is hard to add a new pipeline. There is a lot of possible ways to shoot yourself in the foot. First of all you need to decompose pipeline into small pieces. Decide which worker should execute every small piece. 
+2. It is hard to add a new pipeline. There is a lot of possible ways to shoot yourself in the foot. First of all you need to decompose pipeline into small pieces. Decide for every piece which worker should execute it. Create message lasses for every piece of work. Decide what it an incoming param from a client and what should be calculated for every message class.
+3. Caching. Just no words. Main strategy is to cache only in our api facade in other words on client side.
+4. Debugging.
+5. Message classes reuse for different tasks involves transpor of unused data.
+6. A lot of message POCO classes.
+7. Pipeline represented in builder is hard to read and understand.
+All problem strongly increases time from requirment to release. It is just takes too long to decompose, workaround problems with controlflow and test.
 
- 
 #Ideal solution in theory
+So currently in our project we have a lot of boilerplate code with workarounds which are hard to support. Some time ago I started to think haw can we solve that problem. Main ideas was is to use some actor framework like akka.net or orleans. But after some attempts to emulate system on a local computer I found that they solves only part of problems. There is again small pieces of more complex pipelines. There is no abstract way to compose complex pipelines in code. Depression, depression, depression.
+But several days ago I recieved an question in twitter from @zahardzhan: "Do you use monads described in your blog in practice?" My answer was "NO". I decided to refresh my memories and read my posts just for fun. And after reading of a post about Workflow monad http://hodzanassredin.github.io/2014/07/07/real_world_monad_problem.html I decided to use way described in this post to express pipelines as workflows but after some thoughts and experiments it was transformad into something new.
+So lets as we do in the post about workflow monad start from an ideal solution which allows us to do:
+1. Express pipeline as a simple code.
+2. Separate What from How
+3. Send in messages only information which we need for next steps.
+4. Avoid a lot of POCOs (and repllace them by POFFos(plai old fsharp functions :-)
+5. Could be easilly tested.
+6. Keep workers as simple as possible.
+7. Dynamically choose next worker based on available resources for execution of next step.
+8. If resources of current system satisfaies all current pipeline requirments do it riht here in one place. Maybe in web site action without any queues and workers?
+
+As you can see I did not list here other problems and start from something really simple and after that add new pssibilities one by one. 
 
 #Fsharp solution
+I'm not going to write about whole way of thinking just describe my solution in short and show you some code.
+I decided to write a computation expression builder which could do everything described above.
+1. We can write simple fsharp code inside a builder
+2. A function expressese what and builder epresses how to build pipeline. And run function expresses whhere and how.
+3. Use fsharp possibility to serialize a closure.
+4. The same as 3
+5. We could implement different run function for testing
+6. Our workers should only reciee fsharp function as serialized message, deserialize it and invoke run function with func from message as param.
+7. Our builder should build a func which accepts environment as an argument and break execution if current environment did not satisfies requested resources nd return to a run function information about requested resources and function which will continue work from resource request point all previously executes code will be skipped and all calculaed data will be stored as closure fields. Run function should check builder execution result and send not finished closure to a worker with requested resources.
+8. builder should return calculated value if no unsatisfied resources requested
+
+As a starting point I took Reader monad and changed a signature.
+{% highlight fsharp %}
+type Result<'r, 'a> = 
+        | Ok of 'a
+        | ResourceRequest of string * Reader<'r,'a>
  
+and Reader<'r,'a> = Reader of ('r -> Async<Result<'r,'a>>)
+{% endhighlight %}
+As you can see I also used Async as return type because currently all our code is async.
+And it is easier to merge both monads from the scratch.
+{% highlight fsharp %}
+let runReader (Reader r) env = r env
+//return
+let ret v = Reader (fun _ -> async { return Ok(v)})
+//return async
+let ret_async v = Reader (fun _ -> async {
+                                        let! vno_async= v 
+                                        return Ok(vno_async)})
+type ReaderBuilder() =
+  member this.Return(a)  = ret a
+
+  member this.ReturnFrom(a)  = a
+
+  member this.Bind(m, k) = 
+    Reader (fun r ->
+        async{
+        let! prev = runReader m r
+        match prev with
+            | Ok(prev) -> return! runReader (k prev) r
+            | ResourceRequest(str, m) -> return ResourceRequest(str, this.Bind(m,k))})
+
+let reader = ReaderBuilder()
+//ask environment
+let ask = Reader (fun env -> async { return Ok(env)})
+// building block for environment resource getters
+let rec asks name f =
+    Reader(fun env ->
+        async{
+                printfn "requesting resource %A" name 
+                match f env with
+                    | Some(x) -> printfn "found resource %A" name
+                                 return Ok(x)
+                    | None -> printfn "not found resource %A" name
+                              return ResourceRequest(name, asks name f)})
+{% endhighlight %}
+Thats all, now we can do all what we want to do.
+{% highlight fsharp %}
+let ser = new BinaryFormatter();
+
+let serialize obj =
+    use ms = new MemoryStream()
+    ser.Serialize(ms, obj)
+    ms.ToArray()
+
+let deserialize<'a> (arr:byte[]) =
+    use ms = new MemoryStream(arr)
+    ser.Deserialize(ms)  :?> 'a
+
+type Env = {stop_list : Set<string> option; name : string; big_res : string option}
+let get_stop_words = asks "stop_list" (fun env -> env.stop_list)
+let get_big_res = asks "big_res" (fun env -> env.big_res)
+
+let download url = 
+    reader{
+        let! html = ret_async <| Http.AsyncRequestString(url)
+        return html
+    }
+
+let tokenize (text:string) use_stop_words =
+    reader{
+        printfn "tokenizings" 
+        let! big_res = get_big_res
+        let! stop_words = if use_stop_words then get_stop_words else ret Set.empty   
+        return text.Split([|' ';'<';'>'|]) |> Array.filter(fun x -> Set.contains x stop_words |> not)
+}
+     
+let op url use_stop_words = reader{
+    let! text = download url
+    let! tokens = tokenize text use_stop_words
+    return tokens |> Seq.take 20|> Seq.reduce (fun x y -> x + " | " + y)
+}
+
+let rec execute r env1 env2 =
+    async{
+    printfn "executing in %A" (env1.name)
+    let! run_res = runReader r env1 
+    match run_res with
+        | Ok(res) -> printfn "executed %A" res
+        | ResourceRequest(res_descr, res) -> 
+                                printfn "env swap"
+                                let arr = serialize res
+                                let restored = deserialize<Reader<Env, string>> arr
+                                return! execute restored env2 env1}
+{% endhighlight %}
+Now we are ready to go
+{% highlight fsharp %}
+let stop_env = {stop_list = None; name = "without stop_lst"; big_res = Some("big res")}
+let other_env = {stop_list = Some(["a"; "no";"html"] |> Set.ofList); name = "with stop_lst"; big_res = None}
+let r = op "http://ya.ru" true 
+execute r stop_env other_env
+{% endhighlight %}
+And some result from console.
+
+executing in "without stop_lst"
+tokenizings
+requesting resource "big_res"
+found resource "big_res"
+requesting resource "stop_list"
+not found resource "stop_list"
+env swap
+executing in "with stop_lst"
+requesting resource "stop_list"
+found resource "stop_list"
+executed ...
+
+I would really appreciate if you share your problems and solutions in comments.  
