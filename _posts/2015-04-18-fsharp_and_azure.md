@@ -194,144 +194,160 @@ New problem different types of queues has differet limits to maximum message siz
     public Object Value { get; set; }
 }
 {% endhighlight %}
-Uff a lot of work done and our simple worker can work without any issues. But after some time you understand that your worker is not enought and you need to scale it. Scaling should be no problem because this is a Cloud. Right? No. It is extremely hard in azure Yes there is some possibilities to do autoscaling which depends on some metric But we need to scale depending on queue length and our queue could be changed to other type unsupported by autoscaling. For example there is no autoscaling support for azure storag queue. After some googling I found autoscaling application block. It was outdated and after several days without any success i decided to write my own. Main idea is to use azure management api. You think it is simpe as installing nuget package and writing several lines of code. NOOOOO. It is extremely undoccumented and not easy to understand proccess. In two words you need to load security certificate by thumbprint and after that do some black magick with downloading some xml and changing instance count in it and uploading it back. I'll not write a code here becouse it is a theme for a different blog post. 
+Uff a lot of work done and our simple worker can work without any issues. But after some time you understand that your worker is not enought and you need to scale it. Scaling should be no problem because this is a Cloud. Right? No. It is extremely hard in azure Yes there is some possibilities to do autoscaling which depends on some metric But we need to scale depending on queue length and our queue could be changed to other type unsupported by autoscaling. For example there is no autoscaling support for azure storag queue. After some googling I found autoscaling application block. It was outdated and after several days without any success i decided to write my own. Main idea is to use azure management api. You think it is simpe as installing nuget package and writing several lines of code. NOOOOO. It is extremely undoccumented and not easy to understand proccess. In two words you need to load security certificate by thumbprint and after that do some black magick with downloading some xml and changing instance count in it and uploading it back. I'll not write a code here becouse it is a theme for a different blog post. Now is time to load some file to all of our worker instances. We do it this way. Upload you file to blob storage and during worker loading download it to a local worker storage. You need to enable it in your worker config file and specify local storage size. You should not make a mistake. Because after deploy future changes in local storage settings can broke you deployment and you will be forced to delete cloud service from azure and redeploy it. Also if you specify local storage size which is less than size of your file then you will get a cryptic soap error message during deployment.
+Next step is to utilize all worker cores. We created some abstractions for worker and tasks.
+Worker on start loading all files and other shared resources and after that checks count of logical proccessors and creates this number of task executors. If task executor throws an exception then worker should restart it again.
 
+{% highlight csharp %}
+public abstract class TasksRoleEntryPoint : RoleEntryPoint
+{
+    private readonly List<Task> _tasks = new List<Task>();
 
-    //role which uses several subworkers entry point
-    public abstract class TasksRoleEntryPoint : RoleEntryPoint
+    private readonly CancellationTokenSource _tokenSource;
+
+    private WorkerEntryPoint[] _workers;
+
+    public TasksRoleEntryPoint()
     {
-        private readonly List<Task> _tasks = new List<Task>();
-
-        private readonly CancellationTokenSource _tokenSource;
-
-        private WorkerEntryPoint[] _workers;
-
-        public TasksRoleEntryPoint()
-        {
-            _tokenSource = new CancellationTokenSource();
-        }
-
-        public void Run(WorkerEntryPoint[] arrayWorkers)
-        {
-            try
-            {
-                _workers = arrayWorkers;
-
-                foreach (WorkerEntryPoint worker in _workers)
-                {
-                    worker.OnStart(_tokenSource.Token).Wait();
-                }
-
-                foreach (WorkerEntryPoint worker in _workers)
-                {
-                    var task = worker.ProtectedRun();
-                    _tasks.Add(task);
-                }
-
-                int completedTaskIndex;
-                while ((completedTaskIndex = Task.WaitAny(_tasks.ToArray())) != -1 && _tasks.Count > 0)
-                {
-                    _tasks.RemoveAt(completedTaskIndex);
-                    //Not cancelled so rerun the worker
-                    if (!_tokenSource.Token.IsCancellationRequested)
-                    {
-                        _tasks.Insert(completedTaskIndex, _workers[completedTaskIndex].ProtectedRun());
-                        Task.Delay(1000).Wait();
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Trace.TraceError(e.Message);
-            }
-            Trace.TraceError("Run workers exit");
-        }
-
-        public override bool OnStart()
-        {
-            return base.OnStart();
-        }
-
-        public override void OnStop()
-        {
-            Trace.TraceError("OnStop called");
-            try
-            {
-                _tokenSource.Cancel();
-                Task.WaitAll(_tasks.ToArray());
-            }
-            catch (Exception e)
-            {
-                Trace.TraceError(e.Message);
-            }
-            base.OnStop();
-        }
+        _tokenSource = new CancellationTokenSource();
     }
 
+    public void Run(WorkerEntryPoint[] arrayWorkers)
+    {
+        try
+        {
+            _workers = arrayWorkers;
+
+            foreach (WorkerEntryPoint worker in _workers)
+            {
+                worker.OnStart(_tokenSource.Token).Wait();
+            }
+
+            foreach (WorkerEntryPoint worker in _workers)
+            {
+                var task = worker.ProtectedRun();
+                _tasks.Add(task);
+            }
+
+            int completedTaskIndex;
+            while ((completedTaskIndex = Task.WaitAny(_tasks.ToArray())) != -1 && _tasks.Count > 0)
+            {
+                _tasks.RemoveAt(completedTaskIndex);
+                //Not cancelled so rerun the worker
+                if (!_tokenSource.Token.IsCancellationRequested)
+                {
+                    _tasks.Insert(completedTaskIndex, _workers[completedTaskIndex].ProtectedRun());
+                    Task.Delay(1000).Wait();
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Trace.TraceError(e.Message);
+        }
+        Trace.TraceError("Run workers exit");
+    }
+
+    public override bool OnStart()
+    {
+        return base.OnStart();
+    }
+
+    public override void OnStop()
+    {
+        Trace.TraceError("OnStop called");
+        try
+        {
+            _tokenSource.Cancel();
+            Task.WaitAll(_tasks.ToArray());
+        }
+        catch (Exception e)
+        {
+            Trace.TraceError(e.Message);
+        }
+        base.OnStop();
+    }
+}
+public SomeWorkerClass : TasksRoleEntryPoint{
+    ...
     for (int i = 0; i < Environment.ProcessorCount; i++)
-                {
-                    workers.Add(new CrawlerWorker(stop_words, connectionString, RoleEnvironment.CurrentRoleInstance.Id + " " + i));
-                }
-
-                public class ResponseMessage<T> : BaseMessage, ISetter<T>
     {
-        public T Response { get; set; }
-        
-        public void Set(T value)
-        {
-            Response = value;
-        }
-
-        public override string GetKey()
-        {
-            return "";
-        }
+        workers.Add(new CrawlerWorker(stop_words, connectionString, RoleEnvironment.CurrentRoleInstance.Id + " " + i));
     }
+    ...
+}
+{% endhighlight %}
+So far so good. We have all what we need to use single type worker in azure. It can handle different types of messages and all seems to be fine. But unfortunately for us we have new reuirment to use the same type of worker but with a differnet data. In our case it was different types of text classifiers. So both types of workers have the same pipeline. Crawl -> Extract features -> Feature hashing -> Vectorization -> Classification. Both classifiers takes a lot of memory and loads different files for classifiers and vectorizers. You may think that perfect way to do that is to have two different requests prefixes and one small autoscaler worker instance which will create classifier instance with a different config based on queue prefix. Unfortunately for us it takes too long to create an instance in azure and takes too long to load classifier into worker instance memory. In our case about half an hour. But clients of our web site uses synchronous interface and can't wait too long. So we need to keep one instance in running state for every type of classifier. But it i not a problem from developer point of view. 
+Next feature request is too add some possibility to one type of classifier. And now our worker differs not only by config but alos by incoming message types and code. Now need to separate both types of workers in code.  
+After some profiling we see that we have bottleneck in our performance and it is a crawling stage. Yes it has async nature but we don't want to use an event loop in our prooccesing thread of woker and we have new requirment to implement some new pipline which uses crawling but not related to our classifiers. So we need to move crawling and tokenization into a new small workes instance.  It is cheap and now we autoscale only this worker. Classification workers has only by one instance running thay are too pricy. As you probably know your azure subscription has limit in total count of cores which can be used. So our solution allows us to keep this count small. Now we have a problem in code: how can we express some pipline? It's time for pipline message class. It alows us to express some pipline. It is a simple message class with a message which should be sent to a response reciever. So worker when it recieves a message shoould do some work and create some output value and invoke GetNextMessage(calculated output value). This method returns response message wich could has some fileds populated initially by a client and some fields populated form the calculated output value. This response message should be sent to response reciever. Also in case of any error we need to break execution find a final message, set error data and send to a final result reciever. Why to send error message back to reciever. Because it could be not asynchronous and can be in waiting state and it needs to know when to show error or try again. Probably better way is to add ErrorMessageRecievers.
 
-    public abstract class PipelineMessageBase : BaseMessage
+{% highlight csharp %}
+public abstract class PipelineMessageBase : BaseMessage
+{
+    //normal way next step message
+    public BaseMessage ResponseMessage { get; set; }
+    public BaseMessage GetErrorMessage(string error, string where)
     {
-        public BaseMessage ResponseMessage { get; set; }
-        public BaseMessage GetNextErrorMessage(string error, string where)
+        //find recursively final response message and set error data and send back to final response reciever 
+        if (ErrorResponseMessage != null)
         {
-
-            if (ResponseMessage != null)
-            {
-                ResponseMessage.Error = error;
-                ResponseMessage.StackTrace = where;
-                ResponseMessage.ReauestId = this.ReauestId;
-            }
-            return ResponseMessage;
+            ErrorResponseMessage.Error = error;
+            ErrorResponseMessage.StackTrace = where;
+            ErrorResponseMessage.ReauestId = this.ReauestId;
         }
-
-        public string GetKeyRecursive()
-        {
-            if (this.ResponseMessage == null) this.GetKey();
-            var subKey = this.ResponseMessage is PipelineMessageBase ?
-                (this.ResponseMessage as PipelineMessageBase).GetKeyRecursive() :
-                this.ResponseMessage.GetKey();
-            return String.Format("{0}_{1}", this.GetKey(), subKey);
-        }
+        return ErrorResponseMessage;
     }
+}
 
-    public abstract class PipelineMessage<TO> : PipelineMessageBase
+public abstract class PipelineMessage<TO> : PipelineMessageBase
+{
+    public BaseMessage GetNextMessage(TO output) {
+        // if next error waits response from a previous step than set it
+        if (ResponseMessage != null && ResponseMessage is ISetter<TO>)
+        {
+            (ResponseMessage as ISetter<TO>).Set(output);
+            ResponseMessage.ReauestId = this.ReauestId;
+        }
+        return ResponseMessage;
+    }
+}
+//final response message. Pipeline is finished.
+public class ResponseMessage<T> : BaseMessage, ISetter<T>
+{
+    public T Response { get; set; }
+    
+    public void Set(T value)
     {
-
-        public BaseMessage GetNextMessage(TO output) {
-
-            if (ResponseMessage != null && ResponseMessage is ISetter<TO>)
-            {
-                (ResponseMessage as ISetter<TO>).Set(output);
-                ResponseMessage.ReauestId = this.ReauestId;
-            }
-            return ResponseMessage;
-        }
+        Response = value;
     }
+}
+Now we have a system which allows us to split our work to distributed small pieces and express pipelines with a message builders. For example classification message builder will look like. 
+{% highlight csharp %}
+public BaseMessage BuildClassificatioonMessage(Address responseReciever, string url, bool useStopWords, int ngramsLimit,...){
+    return new CrawlerMessage(){
+        UseStopWords = useStopWords,
+        Url = url,
+        ...
+        ResponseRecievers = new List<Address>(){
+            GetResponseRecieverAddress(WorkerType.Classifier1)}
+        ,
+        ResponseMessage = new ClassifyMessage(){
+            NGramsLimit = nGramsLimit,
+            ...
+            ResponseRecievers = new List<Address>(){responseReciever},
+            ResponseMessage = new ResponseMessage<ClassifierResultDto>()
+        }
+    };
+}
+
+{% endhighlight %}
+#Big problems
+We build some code which allows us to express distributed computations for azure platform. Very interesting but now we have ability to use Microservices pattern. You can read more here http://microservices.io/patterns/microservices.html. We can decompose our alghorithms into small pieces and they could be deployed separately without breaking currently executed pipelines. This system described above have a lot of problems which are really difficult to solve.  With all that hype about Microserices I read a lot of articles and unfortunately fournd no answers to my questions.
+Lets start from our solution description. Our solution has possibility to express only SEQUENTIAL pipelines with a primitive error handling. Thats all. No possibility to express cancellation, loops, if conditions and other controlflow operators, fork/join parallelization, . Ad even with only sequential pipelines it is pretty damn hard to use. 
+1. It is hard to test. You can easilliy test pieces but really difficult to abstract full execution context.
+2. It is hard to add a new pipeline. There is a lot of possible ways to shoot yourself in the foot. First of all you need to decompose pipeline into small pieces. Decide which worker should execute every small piece. 
 
  
-{% endhighlight %}
-
-#Current problems
-
 #Ideal solution in theory
 
 #Fsharp solution
