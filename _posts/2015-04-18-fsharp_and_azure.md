@@ -1,8 +1,8 @@
 ---
 published: true
 layout: post
-title: Distributed computing done right? Part1: History of an azure project.
-tags : [[azure, fsharp, monad, ditributed]
+title: Distributed computing done right? History of an azure project.
+tags : [azure, fsharp, monad, ditributed]
 ---
 
 ## {{page.title}}
