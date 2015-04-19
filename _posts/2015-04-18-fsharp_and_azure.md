@@ -1,7 +1,7 @@
 ---
 published: true
 layout: post
-title: Distributed computing and Azure. History of an project.
+title: Distributed computing done right? Part1: History of an azure project.
 tags : [azure, fsharp, monad, ditributed]
 ---
 
@@ -10,6 +10,7 @@ tags : [azure, fsharp, monad, ditributed]
 <p class="meta">18 April 2015 &#8211; Karelia</p>
 
 #Introduction
+
 I decided to write a history and current state of our distributed azure project. We started from a simple azure worker and finished with a very complex system. I suppose it will be interesting for developers who is going to build some distributed application and hope this post will help them to avoid some mistakes. In addition, I am going to describe two possible solutions in FSharp for our current problems.
 
 #History of an Azure project
@@ -340,7 +341,7 @@ public BaseMessage BuildClassificationMessage(Address responseReciever, string u
 
 {% endhighlight %}
 #Big problems
-We created some code, which allows us to express distributed computations for azure platform. Very interesting, but now we are using Microservices pattern. You can read more here http://microservices.io/patterns/microservices.html. We can decompose our algorithms into small pieces and they could be deployed separately without breaking currently executing pipelines. Unfortunately our system described above have a lot of problems which are really difficult to solve.  With all that hype about Microserices I read many articles and unfortunately found no answers to my questions.
+We created some code, which allows us to express distributed computations for azure platform. Very interesting, but now we are using Microservices pattern. You can read more [here](http://microservices.io/patterns/microservices.html). We can decompose our algorithms into small pieces and they could be deployed separately without breaking currently executing pipelines. Unfortunately our system described above have a lot of problems which are really difficult to solve.  With all that hype about Microserices I read many articles and unfortunately found no answers to my questions.
 Let us start from our solution description. Our solution has possibility to express only SEQUENTIAL pipelines with a primitive error handling. That’s all. No possibility to express cancellation,  loops, if conditions and other control flow operators, fork/join parallelization. Even with only sequential pipelines, it is damn hard to use. 
 1. It is hard to test. You can easily test pieces, but it is really difficult to abstract full execution context for all pipelines.
 2. It is hard to add a new pipeline. There is many possible ways to shoot yourself in the foot. First you need to decompose pipeline into small pieces. Decide for every piece which worker should execute it. Create message classes for every piece of work. 
@@ -352,8 +353,8 @@ Let us start from our solution description. Our solution has possibility to expr
 All from that list increases time from requirement to release. It is just takes too long to decompose, workaround problems with control flow and test.
 
 #Ideal solution in theory
-So currently in our project, we have a lot of boilerplate code with workarounds, which are hard to support. Some time ago, I started to think how can we solve that problems. Main idea was to use some actor framework like akka.net or Orleans. But after some attempts to emulate system on a local computer I found that they can't solve all that problems. There is again small pieces of more complex pipelines. There is no abstract way to compose complex pipelines in code. Quote from @runarorama's twitter  "Actors are an implementation detail for higher-order constructs, not a programming model". Also there are some problems from a types point of view in akka. http://stew.vireo.org/posts/I-hate-akka/. Depression, depression, depression.
-However, several days ago I received a question in twitter from @zahardzhan: "Do you use monads described in your blog in practice?" My answer was "NO". I decided to refresh my memories and read my posts just for fun. And after reading of a post about Workflow monad http://hodzanassredin.github.io/2014/07/07/real_world_monad_problem.html I decided to use a way described in this post to express pipelines as workflows, and after some thoughts and experiments it was transformed into something new.
+So currently in our project, we have a lot of boilerplate code with workarounds, which are hard to support. Some time ago, I started to think how can we solve that problems. Main idea was to use some actor framework like akka.net or Orleans. But after some attempts to emulate system on a local computer I found that they can't solve all that problems. There is again small pieces of more complex pipelines. There is no abstract way to compose complex pipelines in code. Quote from @runarorama's twitter  "Actors are an implementation detail for higher-order constructs, not a programming model". Actors are not a free from their own [problems](http://pchiusano.blogspot.ru/2010/01/actors-are-not-good-concurrency-model.html) too. Depression, depression, depression.
+However, several days ago I received a question in twitter from @zahardzhan: "Do you use monads described in your blog in practice?" My answer was "NO". I decided to refresh my memories and read my posts just for fun. And after reading of a [post](http://hodzanassredin.github.io/2014/07/07/real_world_monad_problem.html) about Workflow monad. I decided to use a way described in this post to express pipelines as workflows, and after some thoughts and experiments it was transformed into something new.
 So let’s, as we do in the post about workflow monad, start from an ideal solution which allows us to do:
 1. Express pipeline as a simple code.
 2. Separate What from How
