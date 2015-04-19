@@ -364,6 +364,7 @@ So let’s, as we do in the post about workflow monad, start from an ideal solut
 6. Keep workers as simple as possible.
 7. Dynamically choose next worker based on available resources for execution of next step.
 8. If resources of current system satisfies all current pipeline requirements do it right here in one place. Maybe in web site action without any queues and workers?
+9. Add basic support for cycles and other control flow operators 
 
 As you can see I did not list here other problems and are going to start from a something simple and after that add new possibilities one by one. 
 
@@ -378,6 +379,7 @@ I decided to write a computation expression builder, which could do everything d
 6. Our workers should only receive fsharp function as serialized message, deserialize it and invoke run function with func from the message as param.
 7. Our builder should build a function, which accepts environment as an argument, and break execution if current environment did not satisfies requested resources and return to a run function information about requested resources and function which will continue work from resource request point, all previously executes code will be skipped and all calculated data will be stored as closure fields. Run function should check builder execution result and send not finished closure to a worker which satisfies requested resources.
 8. Builder should return calculated value if no unsatisfied resources requested
+9. we have it for free form the language
 
 As a starting point, I took Reader monad and changed a signature.
 {% highlight fsharp %}
@@ -494,5 +496,9 @@ requesting resource "stop_list"
 found resource "stop_list"
 executed ...
 
+Now we can go further and add missing functionality error handling, fork join paralellism.
+Do we have new problems? Definitly yes, we need to solve how to use disposable objects, how to not capture resource objects in a closures.... 
+
 I would really appreciate if you share your problems and solutions in comments.  
-In next post we discuss other way to compose distributed computations built as queue combinators, compare actors(fsharp, akka.net, orleans) and csp(golang and clojure), go deep inside reducers, transducers and nessos streams and will find some really interesting stuff.
+
+In the next post we discuss other way to compose distributed computations built as queue combinators, compare actors(fsharp, akka.net, orleans) and csp(golang and clojure), go deep inside reducers, transducers and nessos streams and will find some really interesting stuff.
