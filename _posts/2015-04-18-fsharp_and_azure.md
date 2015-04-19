@@ -287,7 +287,7 @@ public SomeWorkerClass : TasksRoleEntryPoint{
     ...
 }
 {% endhighlight %}
-So far so good. We have all what we need to use single type worker in azure. It can handle different types of messages and all seems to be fine. Unfortunately, we have new requirement to use the same type of worker but with a different data. In our case, it was different types of text classifiers. Both types of workers have the same pipeline. Crawl -> Extract features -> Feature hashing -> Vectorization -> Classification. Both classifiers take a lot of memory and load different files for classifiers and vectorizers. You may think that perfect way to do that is to have two different requests prefixes and one small auto-scaler worker instance, which will create classifier instance with a different configuration based on a queue prefix. Unfortunately, it takes too long to create an instance in azure and takes too long to load classifier into instance’s memory. In our case about half an hour. Nevertheless, clients of our web site uses synchronous interface and cannot wait too long. We need to keep one instance in running state for every type of classifier.  It is not a problem from developer point of view. 
+So far so good. We have all what we need to use single type worker in azure. It can handle different types of messages and all seems to be fine. Unfortunately, we have new requirement to use the same type of worker but with a different data. In our case, it was different types of text classifiers. Both types of workers have the same pipeline. Crawl -> Extract features -> Feature hashing -> Vectorization -> Classification. Both classifiers take a lot of memory and load different files for classifiers and vectorizers. You may think that perfect way to do that is to have two different requests prefixes and one small auto-scaler worker instance, which will create classifier instance with a different configuration based on a queue prefix. Unfortunately, it takes too long to create an instance in azure and takes too long to load classifier into instance’s memory. In our case about half an hour. Nevertheless, clients of our web site uses synchronous interface and cannot wait too long. We need to keep one instance in running state for every type of classifier.  It is not a problem from a developer point of view. 
 Next feature request is to add some possibility to only one type of classifier. Now our workers are different not only by config but also by incoming message types and code. We have to separate both types of workers in code.  
 After some profiling, we see that we have bottleneck in our performance and it is a crawling stage. Yes, it has async nature but we do not want to use an event loop in our processing thread in a worker and we also have new requirement to implement a new pipeline, which uses crawling but not related to our classifiers. So we need to move crawling and tokenization into a new small worker instance.  It is cheap and now we auto scale only this worker. Classification workers have only one instance in a running state, they are too pricy in terms of instance size. As you probably know your azure subscription has a limit in total count of cores which can be used. Our solution allows us to keep this count small. Now we have a problem in code: how can we express some pipeline? It is time for a pipeline message class. It is a simple message class with a message, which have to be sent to a response receiver. So worker, when it receives a message, should do some work and create some output value and invoke GetNextMessage(calculated output value). This method returns response message, which could has some fields populated initially by a client and some fields populated form the calculated output value. This response message should be sent to a response receiver. Also in case of any error, we need to break execution, find a final message, set error data and send it to a final receiver. Why to send error message back to receiver? Because it could be not asynchronous and can be in a waiting state and needs to know when to show error or try again. Probably better way is to add ErrorMessageRecievers.
 
@@ -360,6 +360,7 @@ public BaseMessage BuildClassificationMessage(
 #Big problems
 We created some code, which allows us to express distributed computations for azure platform. Very interesting, but now we are using Microservices pattern. You can read more [here](http://microservices.io/patterns/microservices.html). We can decompose our algorithms into small pieces and they could be deployed separately without breaking currently executing pipelines. Unfortunately our system described above have a lot of problems which are really difficult to solve.  With all that hype about Microserices I read many articles and unfortunately found no answers to my questions.
 Let us start from our solution description. Our solution has possibility to express only SEQUENTIAL pipelines with a primitive error handling. That’s all. No possibility to express cancellation,  loops, if conditions and other control flow operators, fork/join parallelization. Even with only sequential pipelines, it is damn hard to use. 
+
 1. It is hard to test. You can easily test pieces, but it is really difficult to abstract full execution context for all pipelines.
 2. It is hard to add a new pipeline. There is many possible ways to shoot yourself in the foot. First you need to decompose pipeline into small pieces. Decide for every piece which worker should execute it. Create message classes for every piece of work. 
 3. Caching. Just no words. Main strategy is to cache only in our api facade in other words on client side.
@@ -367,12 +368,14 @@ Let us start from our solution description. Our solution has possibility to expr
 5. Message classes reuse for different tasks involves transport of unused data.
 6. Maintain a lot of POCO classes for messages
 7. Pipeline represented in message builder is hard to read and understand.
+
 All from that list increases time from requirement to release. It is just takes too long to decompose, workaround problems with control flow and test.
 
 #Ideal solution in theory
 So currently in our project, we have a lot of boilerplate code with workarounds, which are hard to support. Some time ago, I started to think how can we solve that problems. Main idea was to use some actor framework like akka.net or Orleans. But after some attempts to emulate system on a local computer I found that they can't solve all that problems. There is again small pieces of more complex pipelines. There is no abstract way to compose complex pipelines in code. Quote from @runarorama's twitter  "Actors are an implementation detail for higher-order constructs, not a programming model". Actors are not a free from their own [problems](http://pchiusano.blogspot.ru/2010/01/actors-are-not-good-concurrency-model.html) too. Depression, depression, depression.
 However, several days ago I received a question in twitter from @zahardzhan: "Do you use monads described in your blog in practice?" My answer was "NO". I decided to refresh my memories and read my posts just for fun. And after reading of a [post](http://hodzanassredin.github.io/2014/07/07/real_world_monad_problem.html) about Workflow monad. I decided to use a way described in this post to express pipelines as workflows, and after some thoughts and experiments it was transformed into something new.
 So let’s, as we do in the post about workflow monad, start from an ideal solution which allows us to do:
+
 1. Express pipeline as a simple code.
 2. Separate What from How
 3. Send, in message, only information that we need for next steps.
@@ -388,6 +391,7 @@ As you can see I did not list here other problems and I'm going to start from a 
 #FSharp solution
 I'm not going to write about whole way of thinking just describe my solution in short and show you some code.
 I decided to write a computation expression builder, which could do everything described above.
+
 1. We can write simple fsharp code inside a builder
 2. A function says what should do a pipeline and builder says how to compose the pipeline. In addition, run function says where and how to execute the pipeline.
 3. Use fsharp possibility to serialize a closure.
@@ -511,17 +515,17 @@ execute r stop_env other_env
 {% endhighlight %}
 Console output:
 
-executing in "without stop_lst"
-tokenizing
-requesting resource "big_res"
-found resource "big_res"
-requesting resource "stop_list"
-not found resource "stop_list"
-env swap
-executing in "with stop_lst"
-requesting resource "stop_list"
-found resource "stop_list"
-executed ...
+    executing in "without stop_lst"
+    tokenizing
+    requesting resource "big_res"
+    found resource "big_res"
+    requesting resource "stop_list"
+    not found resource "stop_list"
+    env swap
+    executing in "with stop_lst"
+    requesting resource "stop_list"
+    found resource "stop_list"
+    executed ...
 
 Now we can go further and add missing functionality: error handling, fork join paralellism.
 Do we have new problems? Definitely yes, we need to solve how to use disposable objects, how to avoid capturing of resource objects in a closures.... 
