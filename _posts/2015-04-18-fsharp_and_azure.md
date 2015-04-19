@@ -24,7 +24,10 @@ public interface IQueueWrapper<T> where T : BaseMessage
     void Close();
     void OnMessage(Func<T, Task> act);
     Task Publish(T message);
-    Task Init(string connectionString, string queueName, TimeSpan messagesTimeToLive, CancellationToken token);
+    Task Init(string connectionString, 
+              string queueName, 
+              TimeSpan messagesTimeToLive, 
+              CancellationToken token);
     Task<int?> Length();
 }
 //pull queue, we need to invoke that method periodically
@@ -63,7 +66,8 @@ I am not going to show client code but it almost the same. This simple abstracti
 
 In addition, we hide queues behind a REST api facade implemented as azure web site. Therefore, our external clients know nothing about queues. But how to add possibility to use worker by multiple clients at the same time and give them identical bandwidth? Our abstraction gave us a way to solve it without changing worker code. For azure storage queue, we implemented QueueStorageMulti class.
 {% highlight csharp %}
-public class QueueStorageMulti<T> : IQueueWrapper<T>, ISyncQueue where T : BaseMessage
+public class QueueStorageMulti<T> : IQueueWrapper<T>, ISyncQueue 
+    where T : BaseMessage
 {
     ...
     string prefix;
@@ -94,7 +98,10 @@ public class QueueStorageMulti<T> : IQueueWrapper<T>, ISyncQueue where T : BaseM
         }
     }
 
-    public async Task Init(string connectionString, string queuePrefix, TimeSpan publishTimeToLive, System.Threading.CancellationToken token)
+    public async Task Init(string connectionString, 
+                           string queuePrefix, 
+                           TimeSpan publishTimeToLive, 
+                           System.Threading.CancellationToken token)
     {
         ...
         await Refresh();
@@ -229,13 +236,15 @@ public abstract class TasksRoleEntryPoint : RoleEntryPoint
             }
 
             int completedTaskIndex;
-            while ((completedTaskIndex = Task.WaitAny(_tasks.ToArray())) != -1 && _tasks.Count > 0)
+            while ((completedTaskIndex = Task.WaitAny(_tasks
+                    .ToArray())) != -1 && _tasks.Count > 0)
             {
                 _tasks.RemoveAt(completedTaskIndex);
                 //Not cancelled so rerun the worker
                 if (!_tokenSource.Token.IsCancellationRequested)
                 {
-                    _tasks.Insert(completedTaskIndex, _workers[completedTaskIndex].ProtectedRun());
+                    _tasks.Insert(completedTaskIndex, 
+                                  _workers[completedTaskIndex].ProtectedRun());
                     Task.Delay(1000).Wait();
                 }
             }
@@ -271,7 +280,9 @@ public SomeWorkerClass : TasksRoleEntryPoint{
     ...
     for (int i = 0; i < Environment.ProcessorCount; i++)
     {
-        workers.Add(new CrawlerWorker(stop_words, connectionString, RoleEnvironment.CurrentRoleInstance.Id + " " + i));
+        workers.Add(new CrawlerWorker(stop_words, 
+                                      connectionString,
+                                      RoleEnvironment.CurrentRoleInstance.Id + " " + i));
     }
     ...
 }
@@ -287,7 +298,8 @@ public abstract class PipelineMessageBase : BaseMessage
     public BaseMessage ResponseMessage { get; set; }
     public BaseMessage GetErrorMessage(string error, string where)
     {
-        //find recursively final response message and set error data and send back to final response reciever 
+        //find recursively final response message and set 
+        //error data and send back to final response reciever 
         if (ErrorResponseMessage != null)
         {
             ErrorResponseMessage.Error = error;
@@ -323,7 +335,11 @@ public class ResponseMessage<T> : BaseMessage, ISetter<T>
 {% endhighlight %}
 Now we have a system, which allows us to split our work to distributed small pieces and express pipelines with message builders. For example, classification message builder will look like this. 
 {% highlight csharp %}
-public BaseMessage BuildClassificationMessage(Address responseReciever, string url, bool useStopWords, int ngramsLimit,...){
+public BaseMessage BuildClassificationMessage(
+                                Address responseReciever, 
+                                string url, 
+                                bool useStopWords, 
+                                int ngramsLimit,...){
     return new CrawlerMessage(){
         UseStopWords = useStopWords,
         Url = url,
@@ -411,7 +427,8 @@ type ReaderBuilder() =
         let! prev = runReader m r
         match prev with
             | Ok(prev) -> return! runReader (k prev) r
-            | ResourceRequest(str, m) -> return ResourceRequest(str, this.Bind(m,k))})
+            | ResourceRequest(str, m) -> 
+                    return ResourceRequest(str, this.Bind(m,k))})
 
 let reader = ReaderBuilder()
 //ask environment
@@ -455,7 +472,8 @@ let tokenize (text:string) use_stop_words =
         printfn "tokenizings" 
         let! big_res = get_big_res
         let! stop_words = if use_stop_words then get_stop_words else ret Set.empty   
-        return text.Split([|' ';'<';'>'|]) |> Array.filter(fun x -> Set.contains x stop_words |> not)
+        return text.Split([|' ';'<';'>'|]) 
+                    |> Array.filter(fun x -> Set.contains x stop_words |> not)
 }
      
 let op url use_stop_words = reader{
@@ -471,15 +489,19 @@ let rec execute r env1 env2 =
     match run_res with
         | Ok(res) -> printfn "executed %A" res
         | ResourceRequest(res_descr, res) -> 
-                                printfn "env swap"
-                                let arr = serialize res
-                                let restored = deserialize<Reader<Env, string>> arr
-                                return! execute restored env2 env1}
+                    printfn "env swap"
+                    let arr = serialize res
+                    let restored = deserialize<Reader<Env, string>> arr
+                    return! execute restored env2 env1}
 {% endhighlight %}
 ready to go
 {% highlight fsharp %}
-let stop_env = {stop_list = None; name = "without stop_lst"; big_res = Some("big res")}
-let other_env = {stop_list = Some(["a"; "no";"html"] |> Set.ofList); name = "with stop_lst"; big_res = None}
+let stop_env = {stop_list = None; 
+                name = "without stop_lst"; 
+                big_res = Some("big res")}
+let other_env = {stop_list = Some(["a"; "no";"html"] |> Set.ofList); 
+                 name = "with stop_lst"; 
+                 big_res = None}
 let r = op "http://ya.ru" true 
 execute r stop_env other_env
 {% endhighlight %}
