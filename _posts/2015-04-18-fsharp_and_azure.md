@@ -320,6 +320,7 @@ public class ResponseMessage<T> : BaseMessage, ISetter<T>
         Response = value;
     }
 }
+{% endhighlight %}
 Now we have a system, which allows us to split our work to distributed small pieces and express pipelines with message builders. For example, classification message builder will look like this. 
 {% highlight csharp %}
 public BaseMessage BuildClassificationMessage(Address responseReciever, string url, bool useStopWords, int ngramsLimit,...){
