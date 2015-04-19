@@ -281,8 +281,8 @@ public SomeWorkerClass : TasksRoleEntryPoint{
     for (int i = 0; i < Environment.ProcessorCount; i++)
     {
         workers.Add(new CrawlerWorker(stop_words, 
-                                      connectionString,
-                                      RoleEnvironment.CurrentRoleInstance.Id + " " + i));
+                      connectionString,
+                      RoleEnvironment.CurrentRoleInstance.Id + " " + i));
     }
     ...
 }
@@ -457,7 +457,9 @@ let deserialize<'a> (arr:byte[]) =
     use ms = new MemoryStream(arr)
     ser.Deserialize(ms)  :?> 'a
 
-type Env = {stop_list : Set<string> option; name : string; big_res : string option}
+type Env = {stop_list : Set<string> option; 
+            name : string; 
+            big_res : string option}
 let get_stop_words = asks "stop_list" (fun env -> env.stop_list)
 let get_big_res = asks "big_res" (fun env -> env.big_res)
 
@@ -471,7 +473,9 @@ let tokenize (text:string) use_stop_words =
     reader{
         printfn "tokenizings" 
         let! big_res = get_big_res
-        let! stop_words = if use_stop_words then get_stop_words else ret Set.empty   
+        let! stop_words = if use_stop_words 
+                            then get_stop_words 
+                            lse ret Set.empty   
         return text.Split([|' ';'<';'>'|]) 
                     |> Array.filter(fun x -> Set.contains x stop_words |> not)
 }
