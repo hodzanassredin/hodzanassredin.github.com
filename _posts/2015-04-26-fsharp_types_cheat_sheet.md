@@ -48,7 +48,9 @@ type Dictionary<'TKey, 'TValue> = And<Map<'TKey,'TValue>,Push<And<'TKey,'TValue>
 type Array<'T> = Dictionary<int,'T>
 
 type ImpureReduce<'T> = Push<'T>
-type NessosStream<'T> =  Push<ImpureReduce<'T>> //it will finish invokation of ImpureReduce before exit
+
+//it will finish invokation of ImpureReduce before exit
+type NessosStream<'T> =  Push<ImpureReduce<'T>> 
 
 type ContReader<'TENV, 'T, 'TResult> = Reader<'TENV, Cont<'T, 'TResult>>
 {% endhighlight %}
