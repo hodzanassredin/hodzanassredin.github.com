@@ -52,4 +52,7 @@ type ImpureReduce<'T> = Push<'T>
 type NessosStream<'T> =  Push<ImpureReduce<'T>> 
 
 type ContReader<'TENV, 'T, 'TResult> = Reader<'TENV, Cont<'T, 'TResult>>
+
+type MailBox<'T> = Pull<'T>
+type Actor<'T> = Map<MailBox<'T>, Async<unit>> 
 {% endhighlight %}
