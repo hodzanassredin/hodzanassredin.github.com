@@ -45,9 +45,10 @@ type AsyncSeq<'T> = AsyncSeq of Async<Maybe<And<'T, AsyncSeq<'T>>>>
 type List<'T> = List of Maybe<And<'T, List<'T>>>
 type LazyList<'T> = LazyList of Maybe<Lazy<And<'T, LazyList<'T>>>>
 type Reducer<'TACC,'T> = Map<And<'TACC,'T>, 'TACC>
+type Reducible<'TACC,'T> = Map<And<Reducer<'TACC,'T>, 'TACC>, 'TACC>
 type Transducer<'TACC,'T> = Map<Reducer<'TACC,'T>,Reducer<'TACC,'T>>
 type Composition<'T> = Reducer<'T,'T>
-type Composable = Composable of Composition<Composable>
+type Composable<'T> = Reducible<'T,'T>
 type Dictionary<'TKey, 'TValue> = And<Map<'TKey,Maybe<'TValue>>,Push<And<'TKey,'TValue>>>
 type Array<'T> = Dictionary<int,'T>
 
