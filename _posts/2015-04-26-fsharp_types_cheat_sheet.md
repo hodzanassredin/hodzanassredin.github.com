@@ -92,8 +92,8 @@ type SIteratee<'T, 'TACC> = Iteratee of Or<'TACC, Map<'T, SIteratee<'T, 'TACC>>>
 //iteratee
 type IStream<'Chunk> = Finite<Maybe<'Chunk>>
 type Iteratee<'Chunk,'TACC> = Iteratee of Or<Throwable<And<'TACC, IStream<'Chunk>>>,Map<IStream<'Chunk>,Iteratee<'Chunk,'TACC>>>
-type Enumerator<'Chunk,'T> = Map<Iteratee<'Chunk,'T>,Iteratee<'Chunk,'T>>
-type Enumeratee<'ChunkOut,'ChunkIn,'T> = Map<Iteratee<'ChunkIn,'T>,Iteratee<'ChunkOut, Iteratee<'ChunkIn,'T>>>
+type Enumerator<'Chunk,'TACC> = Map<Iteratee<'Chunk,'TACC>,Iteratee<'Chunk,'TACC>>
+type Enumeratee<'ChunkOut,'ChunkIn,'T> = Map<Iteratee<'ChunkIn,'TACC>,Iteratee<'ChunkOut, Iteratee<'ChunkIn,'TACC>>>
 
 
 type ContReader<'TENV, 'T, 'TResult> = Reader<'TENV, Cont<'T, 'TResult>>
