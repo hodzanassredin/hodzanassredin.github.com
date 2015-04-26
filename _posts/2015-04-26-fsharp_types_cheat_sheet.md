@@ -28,7 +28,7 @@ type Maybe<'T> = Or<'T, unit>
 //different semantics of maybe
 type Finite<'T> = Maybe<'T>
 type Cancelable<'T> = Maybe<'T>
-type Throwable<'T> = Or<'T,Exception>
+type Throwable<'T> = Or<'T,exn>
 type Unsubscribe = Do
 
 type InfiniteIterator<'T> = Pull<'T>
@@ -85,6 +85,15 @@ type Publisher<'T> = Push<Subscriber<'T>>
 //scalaz streams
 type Monad<'T> = 'T//workaround
 type Proccess<'T> = And<And<Map<Monad<'T>, Monad<unit>>, Map<Monad<'T>, Monad<'T>>>, Map<Monad<'T>, Monad<Iterator<'T>>>>
+
+//simple Iteratee
+type SIteratee<'T, 'TACC> = Iteratee of Or<'TACC, Map<'T, SIteratee<'T, 'TACC>>>
+
+//iteratee
+type IStream<'Chunk> = Finite<Maybe<'Chunk>>
+type Iteratee<'Chunk,'TACC> = Iteratee of Or<Throwable<And<'TACC, IStream<'Chunk>>>,Map<IStream<'Chunk>,Iteratee<'Chunk,'TACC>>>
+type Enumerator<'Chunk,'T> = Map<Iteratee<'Chunk,'T>,Iteratee<'Chunk,'T>>
+type Enumeratee<'ChunkOut,'ChunkIn,'T> = Map<Iteratee<'ChunkIn,'T>,Iteratee<'ChunkOut, Iteratee<'ChunkIn,'T>>>
 
 
 type ContReader<'TENV, 'T, 'TResult> = Reader<'TENV, Cont<'T, 'TResult>>
