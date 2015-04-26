@@ -52,9 +52,10 @@ type Composable<'T> = Reducible<'T,'T>
 type Dictionary<'TKey, 'TValue> = And<Map<'TKey,Maybe<'TValue>>,Push<And<'TKey,'TValue>>>
 type Array<'T> = Dictionary<int,'T>
 
-type ImpureReduce<'T> = Push<'T>
-//it will finish invocation of ImpureReduce before exit
-type NessosStream<'T> =  Push<ImpureReduce<'T>> 
+type ReduceForSideEffect<'T> = Reducer<unit,'T>
+//it will finish invokation of ImpureReduce before exit
+type NessosStream<'T> =  Push<ReduceForSideEffect<'T>> 
+
 
 type ContReader<'TENV, 'T, 'TResult> = Reader<'TENV, Cont<'T, 'TResult>>
 
