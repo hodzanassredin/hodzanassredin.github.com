@@ -39,13 +39,13 @@ type Observer<'T> = Push<Throwable<Finite<'T>>>
 type Observable<'T> = Map<Observer<'T>,Unsubscribe>
 //rx java
 type JavaObserver<'T> = Observer<'T>
-type JavaIsUnsubscribed = Pull<bool>
-type JavaSubscription = And<Unsubscribe,JavaIsUnsubscribed>
-type JavaObservable<'T> = Map<Observer<'T>,JavaSubscription>
+type IsUnsubscribed = Pull<bool>
+type Subscription = And<Unsubscribe,IsUnsubscribed>
+type JavaObservable<'T> = Map<Observer<'T>,Subscription>
 type JavaProducer = Push<int> //backpressure
 type OnStart = Do
-type JavaSubscriber<'T> = And<And<And<Observer<'T>,JavaSubscription>,Push<JavaProducer>>,OnStart> 
-//fsharp events
+type JavaSubscriber<'T> = And<And<And<Observer<'T>,Subscription>,Push<JavaProducer>>,OnStart> 
+//end java rx
 type IEvent<'T> = Push<Push<'T>>
 type Event<'T> = And<IEvent<'T>,Push<'T>>
 type Id<'T> = Map<'T,'T>
@@ -59,6 +59,12 @@ type Async<'T, 'T2> = Cont<Cancelable<Throwable<'T>>, 'T2>
 type Recursion<'T> = Recursion of And<'T,Lazy<Recursion<'T>>>
 type FiniteRecursion<'T> = FiniteRecursion of Finite<Lazy<And<'T,FiniteRecursion<'T>>>>
 type AsyncSeq<'T> = AsyncSeq of Async<Finite<And<'T, AsyncSeq<'T>>>>
+//Async iterable with count
+type AsyncUnsubscribe = Pull<Async<unit>>
+type AsyncSubscription = And<AsyncUnsubscribe, IsUnsubscribed>
+type AsyncIterator<'T> = And<AsyncSubscription, Map<int,Async<Iterator<'T>>>>
+type AsyncIterable<'T> = Pull<AsyncIterator<'T>>
+//end
 type List<'T> = List of Finite<And<'T, List<'T>>>
 type LazyList<'T> = LazyList of Finite<Lazy<And<'T, LazyList<'T>>>>
 type Reducer<'TACC,'T> = Map<And<'TACC,'T>, 'TACC>
@@ -72,9 +78,13 @@ type Array<'T> = Dictionary<int,'T>
 type NessosStream<'T> = Reducible<unit,'T>
 
 //Reactive streams
-type Subscription = And<Push<int>, Unsubscribe>
-type Subscriber<'T> = And<Observer<'T>, Push<Subscription>>
+type RsSubscription = And<Push<int>, Unsubscribe>
+type Subscriber<'T> = And<Observer<'T>, Push<RsSubscription>>
 type Publisher<'T> = Push<Subscriber<'T>>
+
+//scalaz streams
+type Monad<'T> = 'T//workaround
+type Proccess<'T> = And<And<Map<Monad<'T>, Monad<unit>>, Map<Monad<'T>, Monad<'T>>>, Map<Monad<'T>, Monad<Iterator<'T>>>>
 
 
 type ContReader<'TENV, 'T, 'TResult> = Reader<'TENV, Cont<'T, 'TResult>>
