@@ -34,8 +34,18 @@ type Unsubscribe = Do
 type InfiniteIterator<'T> = Pull<'T>
 type Iterator<'T> = InfiniteIterator<Finite<'T>>
 type Iteratable<'T> = Pull<Iterator<'T>>
+//rx
 type Observer<'T> = Push<Throwable<Finite<'T>>>
 type Observable<'T> = Map<Observer<'T>,Unsubscribe>
+//rx java
+type JavaObserver<'T> = Observer<'T>
+type JavaIsUnsubscribed = Pull<bool>
+type JavaSubscription = And<Unsubscribe,JavaIsUnsubscribed>
+type JavaObservable<'T> = Map<Observer<'T>,JavaSubscription>
+type JavaProducer = Push<int> //backpressure
+type OnStart = Do
+type JavaSubscriber<'T> = And<And<And<Observer<'T>,JavaSubscription>,Push<JavaProducer>>,OnStart> 
+//fsharp events
 type IEvent<'T> = Push<Push<'T>>
 type Event<'T> = And<IEvent<'T>,Push<'T>>
 type Id<'T> = Map<'T,'T>
@@ -60,6 +70,12 @@ type Dictionary<'TKey, 'TValue> = And<Map<'TKey,'TValue>,Push<And<'TKey,'TValue>
 type Array<'T> = Dictionary<int,'T>
 
 type NessosStream<'T> = Reducible<unit,'T>
+
+//Reactive streams
+type Subscription = And<Push<int>, Unsubscribe>
+type Subscriber<'T> = And<Observer<'T>, Push<Subscription>>
+type Publisher<'T> = Push<Subscriber<'T>>
+
 
 type ContReader<'TENV, 'T, 'TResult> = Reader<'TENV, Cont<'T, 'TResult>>
 
