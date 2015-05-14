@@ -19,6 +19,7 @@ There are some links where you could find patterns description.
 3. [Design Patterns for Decomposition and Coordination on Multicore Architectures](https://msdn.microsoft.com/en-us/library/ff963553.aspx)
 4. [REACTIVE DESIGN PATTERNS](http://www.typesafe.com/resources/e-book/reactive-design-patterns)
 5. [Seven Concurrency Models in Seven Weeks: When Threads Unravel](https://pragprog.com/book/pb7con/seven-concurrency-models-in-seven-weeks)
+
 I think you can easily find moreб but these resources were very helpful for me.
 Now we can name some patterns naively implemented in [previous post](http://hodzanassredin.github.io/2015/04/18/fsharp_and_azure.html):
 Pipes and Filters, Routing Slip...
@@ -48,8 +49,10 @@ let processImageSync i =
     outStream.Write(pixels', 0, numPixels)
 
 {% endhighlight %}
+
 We wrote simple function which uses blocking io to perform the task.
 Also we added "io_bound" variable to emulate (very naively) io or cpu boud work. And finally our worker will look like this
+
 {% highlight fsharp %}
 //emulating input queue
 let ImageIdsFormQueueSeq = Enumerable.Range(1, numImages)
@@ -57,7 +60,9 @@ let processImagesSync () =
         for i in ImageIdsFormQueueSeq do
             processImageSync(i)
 {% endhighlight %}
+
 But this sequential lets parallelize it.
+
 {% highlight fsharp %}
 let parallelSync () =
         Parallel.ForEach(ImageIdsFormQueueSeq, processImageSync) |> ignore
