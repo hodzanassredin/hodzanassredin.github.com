@@ -7,6 +7,7 @@ tags : [azure, fsharp, distributed, csp, patterns]
 
 ## {{page.title}}
 
+
 <p class="meta">14 May 2015 &#8211; Karelia</p>
 
 Let’s continue our investigation about how to create real world distributed apps. But before we continue, we should find a well-established dictionary for our problem domain.
@@ -67,8 +68,10 @@ But this sequential lets parallelize it.
 let parallelSync () =
         Parallel.ForEach(ImageIdsFormQueueSeq, processImageSync) |> ignore
 {% endhighlight %}
+
 But this function uses sync io and it blocks threads from the thread pool.
 Let’s rewrite it with async io.
+
 {% endhighlight %}
 But this sequential lets parallelize it.
 {% highlight fsharp %}
