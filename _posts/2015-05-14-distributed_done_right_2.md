@@ -241,7 +241,7 @@ let wait_finish ch = async{
         printfn "proccessed %d" !proccessed
 }
 {% endhighlight %}
-It is time for load balancer it will start specified number of workers and will check input and output queues lengths and increase or reduce number of workers at runtime.
+It is time for load balancer, it will start specified number of workers and will check lengths of input and output queues and increase or reduce number of workers at runtime.
 {% highlight fsharp %}
 let loadBalancer (cts:CancellationTokenSource) 
 				 name 
