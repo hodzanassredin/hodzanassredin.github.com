@@ -46,8 +46,8 @@ let processImageSync i =
     let pixels = Array.zeroCreate numPixels
     let nPixels = inStream.Read(pixels, 0, numPixels);
     let pixels' = if not io_bound || i % 2 = 0 
-        then transformImage(pixels, i) 
-        else pixels
+                        then transformImage(pixels, i) 
+                        else pixels
     use outStream =  File.OpenWrite(sprintf "Image%d.done" i)
     outStream.Write(pixels', 0, numPixels)
 
@@ -76,7 +76,9 @@ let processImageAsync i = async {
        use inStream = File.OpenRead(sprintf "Image%d.tmp" i)
        if io_bound then do! Async.Sleep(200)
        let! pixels = inStream.AsyncRead(numPixels)
-       let  pixels' = if not io_bound || i % 2 = 0 then transformImage(pixels, i) else pixels
+       let  pixels' = if not io_bound || i % 2 = 0 
+                        then transformImage(pixels, i) 
+                        else pixels
        use outStream = File.OpenWrite(sprintf "Image%d.done" i)
        do! outStream.AsyncWrite(pixels')
 }
@@ -87,7 +89,7 @@ let processImagesAsync() =
 //csharp like version
 let processImagesAsyncTasks() =
     let tasks = ImageIdsFormQueueSeq
-                             .Select(fun i -> Async.StartAsTask(processImageAsync(i)))
+                    .Select(fun i -> Async.StartAsTask(processImageAsync(i)))
     Task.WhenAll(tasks).Wait()
 {% endhighlight %}
 Let’s add some time measurement and check which version is faster.
