@@ -220,15 +220,18 @@ async {
 let proccess_images stopChannel = stoppableWorker loaded_images stopChannel 
     (fun (i, pixels) -> 
         async {
-            let  pixels' = if not io_bound || i % 2 = 0 then transformImage(pixels, i) else pixels
+            let  pixels' = if not io_bound || i % 2 = 0 
+                                then transformImage(pixels, i) 
+                                else pixels
             do! proccessed_images.AsyncAdd((i, pixels')) })
 
-let save_images stopChannel= stoppableWorker proccessed_images stopChannel (fun (i, pixels) -> 
-async{
-    use outStream = File.OpenWrite(sprintf "Image%d.done" i)
-    do! outStream.AsyncWrite(pixels) 
-    do! finished.AsyncAdd(()) 
-})
+let save_images stopChannel= stoppableWorker proccessed_images stopChannel 
+(fun (i, pixels) -> 
+    async{
+        use outStream = File.OpenWrite(sprintf "Image%d.done" i)
+        do! outStream.AsyncWrite(pixels) 
+        do! finished.AsyncAdd(()) 
+    })
 
 let wait_finish ch = async{
     let proccessed = ref 0 
