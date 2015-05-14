@@ -1,7 +1,7 @@
 ---
 published: true
 layout: post
-title: Distributed computing done right? PART II Maximizing workers throughput.
+title: Distributed computing done right? Maximizing workers throughput.
 tags : [azure, fsharp, distributed, csp, patterns]
 ---
 
