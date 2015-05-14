@@ -300,6 +300,7 @@ with :? System.OperationCanceledException -> ()
 cts.Cancel()
 {% endhighlight %}
 If you run this code then you will see something like this.
+
 	load_images inq 1 outq 0 workers 2proccess_images inq 0 outq 0 workers 2
 	save_images inq 0 outq 0 workers 2
 
