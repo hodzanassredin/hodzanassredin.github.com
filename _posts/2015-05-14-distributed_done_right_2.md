@@ -328,5 +328,5 @@ If you run this code then you will see something like this.
 	save_images inq 0 outq 0 workers 2
 	proccess_images inq 4 outq 0 workers 2
 	load_images inq 1971 outq 4 workers 9
-It spend some time before it will find the best count of workers for every task. For better performance you could change starting number of workers from minimal to maximum count. Also we could easily change rules for load balancer and use performance metrics of used resource and so on. It is not production quality code but could be rewrote and after that you will have possibility to read and use [Golang patterns](http://blog.golang.org/advanced-go-concurrency-patterns) in your fsharp code.
+It takes some time to find the best count of workers for every task. For better performance you could change starting number of workers from minimal to maximal count. Also we could easily change rules for load balancer and use performance metrics of used resource and so on. It is not production quality code, but could be rewrote and after that you will have possibility to read and use [Golang patterns](http://blog.golang.org/advanced-go-concurrency-patterns) in your fsharp code.
 Unfortunately I have no enough time for this blog so actors will arrive only in the next part. And as usual commants and corrections are welcome.
