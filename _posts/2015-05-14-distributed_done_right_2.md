@@ -103,7 +103,7 @@ time processImagesAsync "processImagesAsync"
 time processImagesAsyncTasks "processImagesAsyncTasks"
 time parallelSync "parallelSync"
 {% endhighlight %}
-On my machine with numImages = 2000, parallel asynchronous and parallel sync versions for cpu bound tasks take the same amount of time, but for io bound tasks sync version is 2 times slower than async. Sequential sync version is 10 times slower than parallel sync version. But do you see a problem here with async version? It has unbounded concurrency level. In short it maps all ids into tasks and starts them in parallel. This kind of behavior will stress our data source and until eventually it fails and requests starts to error. Let’s limit concurrency level with a semaphore. We can use TPL schedulers for that purpose also but semaphore is easier to understand.
+On my machine with numImages = 2000, parallel asynchronous and parallel sync versions for cpu bound tasks take the same amount of time, but for io bound tasks sync version is 2 times slower than async. Sequential sync version is 10 times slower than parallel sync version. But do you see a problem here with async version? It has unbounded concurrency level. In short it maps all ids into tasks and starts them in parallel. This kind of behavior will stress our data source until eventually it fails and requests starts to error. Let’s limit concurrency level with a semaphore. We can use TPL schedulers for that purpose also but semaphore is easier to understand.
 {% highlight fsharp %}
 let processImagesAsyncSlim limit =
     let throttler = new SemaphoreSlim(limit);
