@@ -21,12 +21,12 @@ There are some links where you could find patterns description.
 4. [REACTIVE DESIGN PATTERNS](http://www.typesafe.com/resources/e-book/reactive-design-patterns)
 5. [Seven Concurrency Models in Seven Weeks: When Threads Unravel](https://pragprog.com/book/pb7con/seven-concurrency-models-in-seven-weeks)
 
-I think you can easily find moreб but these resources were very helpful for me.
+I think you can easily find more, but these resources were very helpful for me.
 Now we can name some patterns naively implemented in [previous post](http://hodzanassredin.github.io/2015/04/18/fsharp_and_azure.html):
 Pipes and Filters, Routing Slip...
 #Problem
-Now let’s describe a problem which is usual when you are developing a worker role. For example we have a task to process a lot of images apply some filter for them. We could develop a worker role which will grab image ids from an input queue, load, and process and save them in parallel. We also setup auto scaling to add or remove additional role instances based on the input queue length. 
-Probably our worker is cpu bound but it also could be io bound if image storage will be not so fast. Let’s represent a problem as a simple function. 
+Now let’s describe a problem which is usual when you are developing a worker role. For example we have a task to process a lot of images, apply some filter to them. We could develop a worker role which will grab image ids from an input queue, load, and process and save them in parallel. We can also setup auto scaling to add or remove additional role instances based on the input queue length. 
+Probably our worker is cpu bound, but also it could be io bound if image storage will be not so fast. Let’s represent a problem as a simple function. 
 
 {% highlight fsharp %}
 let numImages = 2000
