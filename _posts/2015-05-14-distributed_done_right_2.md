@@ -261,7 +261,11 @@ let loadBalancer (cts:CancellationTokenSource)
         elif !workers < max && (inch.Count = inch.MaxCount || outch.Count = 0) 
             then Async.Start(worker stopper)
                  workers := !workers + 1
-        printfn "%s inq %d outq %d workers %d" name inch.Count outch.Count !workers
+        printfn "%s inq %d outq %d workers %d" 
+                name 
+                inch.Count 
+                outch.Count 
+                !workers
         do! Async.Sleep(100)
 }
 {% endhighlight %}
