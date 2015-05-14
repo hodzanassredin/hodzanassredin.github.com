@@ -273,10 +273,29 @@ To start our pipeline we should wrap our stoppable workers into load balancer an
 {% highlight fsharp %}
 let cts = new CancellationTokenSource()
 Async.Start(idGen,cts.Token)
-Async.Start(loadBalancer cts "load_images" loadImages ids loaded_images 1 100, cts.Token)
-Async.Start(loadBalancer cts "proccess_images" proccess_images loaded_images proccessed_images 1 System.Environment.ProcessorCount, cts.Token)
-Async.Start(loadBalancer cts "save_images" save_images proccessed_images finished 1 100, cts.Token)
-try Async.RunSynchronously(wait_finish finished, cancellationToken = cts.Token)
+Async.Start(loadBalancer cts 
+                         "load_images" 
+                         loadImages 
+                         ids 
+                         loaded_images 
+                         1 
+                         100, cts.Token)
+Async.Start(loadBalancer cts 
+                         "proccess_images" 
+                         proccess_images 
+                         loaded_images 
+                         proccessed_images 
+                         1 
+                         System.Environment.ProcessorCount, cts.Token)
+Async.Start(loadBalancer cts 
+                         "save_images" 
+                         save_images 
+                         proccessed_images 
+                         finished 
+                         1 
+                         100, cts.Token)
+try Async.RunSynchronously(wait_finish finished, 
+                            cancellationToken = cts.Token)
 with :? System.OperationCanceledException -> ()
 cts.Cancel()
 {% endhighlight %}
