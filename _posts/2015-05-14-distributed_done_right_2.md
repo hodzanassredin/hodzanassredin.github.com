@@ -45,14 +45,15 @@ let processImageSync i =
     if io_bound then Thread.Sleep(200)
     let pixels = Array.zeroCreate numPixels
     let nPixels = inStream.Read(pixels, 0, numPixels);
-    let pixels' = if not io_bound || i % 2 = 0 then transformImage(pixels, i) else pixels
+    let pixels' = if not io_bound || i % 2 = 0 
+        then transformImage(pixels, i) 
+        else pixels
     use outStream =  File.OpenWrite(sprintf "Image%d.done" i)
     outStream.Write(pixels', 0, numPixels)
 
 {% endhighlight %}
 
-We wrote simple function which uses blocking io to perform the task.
-Also we added "io_bound" variable to emulate (very naively) io or cpu boud work. And finally our worker will look like this
+We wrote simple function which uses blocking io to perform the task. Also we added "io_bound" variable to emulate (very naively) io or cpu boud work. And finally our worker will look like this
 
 {% highlight fsharp %}
 //emulating input queue
