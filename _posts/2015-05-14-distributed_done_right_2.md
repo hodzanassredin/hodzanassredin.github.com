@@ -258,9 +258,9 @@ let loadBalancer (cts:CancellationTokenSource)
         if !workers > min && inch.Count = 0 then 
             do! stopper.AsyncAdd(())
             workers := !workers - 1
-        elif !workers < max && (inch.Count = inch.MaxCount || outch.Count = 0) then
-            Async.Start(worker stopper)
-            workers := !workers + 1
+        elif !workers < max && (inch.Count = inch.MaxCount || outch.Count = 0) 
+            then Async.Start(worker stopper)
+                 workers := !workers + 1
         printfn "%s inq %d outq %d workers %d" name inch.Count outch.Count !workers
         do! Async.Sleep(100)
 }
