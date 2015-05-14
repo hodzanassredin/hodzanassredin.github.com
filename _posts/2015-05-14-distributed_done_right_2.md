@@ -69,11 +69,7 @@ let parallelSync () =
         Parallel.ForEach(ImageIdsFormQueueSeq, processImageSync) |> ignore
 {% endhighlight %}
 
-But this function uses sync io and it blocks threads from the thread pool.
-Let’s rewrite it with async io.
-
-{% endhighlight %}
-But this sequential lets parallelize it.
+But this function uses sync io and it blocks threads from the thread pool. We will rewrite it with async io.
 {% highlight fsharp %}
 let processImageAsync i = async {
        use inStream = File.OpenRead(sprintf "Image%d.tmp" i)
