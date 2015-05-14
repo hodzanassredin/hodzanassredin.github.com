@@ -194,7 +194,9 @@ let switch (q1:BlockingQueueAgent<_>) (q2:BlockingQueueAgent<_>) =
 {% endhighlight %}
 Very naive but simple and works. Now we could express our wrapper for workers which adds possibility to be stopped.
 {% highlight fsharp %}
-let stoppableWorker (inp:BlockingQueueAgent<_>) (stop:BlockingQueueAgent<_>) f = 
+let stoppableWorker (inp:BlockingQueueAgent<_>) 
+                    (stop:BlockingQueueAgent<_>) 
+                    f = 
 async {
     let running = ref true
     while !running do 
@@ -215,10 +217,11 @@ async {
     let! pixels = inStream.AsyncRead(numPixels)
     do! loaded_images.AsyncAdd((i,pixels)) 
 })
-let proccess_images stopChannel = stoppableWorker loaded_images stopChannel (fun (i, pixels) -> 
-async {
-    let  pixels' = if not io_bound || i % 2 = 0 then transformImage(pixels, i) else pixels
-    do! proccessed_images.AsyncAdd((i, pixels')) })
+let proccess_images stopChannel = stoppableWorker loaded_images stopChannel 
+    (fun (i, pixels) -> 
+        async {
+            let  pixels' = if not io_bound || i % 2 = 0 then transformImage(pixels, i) else pixels
+            do! proccessed_images.AsyncAdd((i, pixels')) })
 
 let save_images stopChannel= stoppableWorker proccessed_images stopChannel (fun (i, pixels) -> 
 async{
