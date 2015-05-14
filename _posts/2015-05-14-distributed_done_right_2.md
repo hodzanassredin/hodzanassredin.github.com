@@ -208,7 +208,7 @@ async {
             	running := false
 }
 {% endhighlight %}
-It tries to get from a stop channel and an input channel. If it receives stop signal then it stops in other case it invokes worker function. And workers built on top of stoppable worker.
+It tries to get from both a stop channel and an input channel. If it receives stop signal then it stops, in other case it invokes worker function. And finally workers are built on top of stoppable worker.
 {% highlight fsharp %}
 et loadImages stopChannel= stoppableWorker ids stopChannel (fun i -> 
 async {
