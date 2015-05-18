@@ -455,12 +455,16 @@ let rec server (x:int) (send_resp: int -> Async<unit>) : Server<int> =
         withNack <| 
        		fun nack -> async{
                 let alt =  Alt.choose (wrap(guard(nack), fun _ -> x)
-                                       ,wrap(guard(send_resp(x)), fun _ -> x + 1)) 
+                                       ,wrap(guard(send_resp(x)), 
+                                      	     fun _ -> x + 1)) 
                 let! x = run alt 
                 return server x send_resp
             })
 
-let rec poll_client (rcv_resp: unit -> Async<int>) (server:Server<int>) (server2:Server<int>) (acc: int list) : Async<int list> = async{
+let rec poll_client (rcv_resp: unit -> Async<int>) 
+			(server:Server<int>) 
+			(server2:Server<int>) 
+			(acc: int list) : Async<int list> = async{
         if List.length acc > 10 then return acc
         else let new_serv = choose(wrap(unwrap_server server, 
         				fun new_serv -> new_serv, server2)
