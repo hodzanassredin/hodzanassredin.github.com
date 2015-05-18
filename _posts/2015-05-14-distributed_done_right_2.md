@@ -333,7 +333,7 @@ Unfortunately I have no enough time for this blog so actors will arrive only in 
 #Update
 Recommendation for Further Reading: [Programming in Hopac](https://github.com/Hopac/Hopac/blob/master/Docs/Programming.md) suggested by [Vasily Kirichenko](https://twitter.com/kot_2010). 
 #Update 2
-Hopac library has an intersting concept of [Alternatives](http://hopac.github.io/Hopac/Hopac.html#def:type Hopac.Alt) (events in Concurrent ML). Alternative object represents a first-class selective operation with possibility to use nack message for not selected concurrent operations (where we used compensation transaction). It was a little bit hard to understand how they work. I implemented them using only fsharp async, probably it would be helpful for someone.
+Hopac library has an intersting concept of [Alternatives](http://hopac.github.io/Hopac/Hopac.html#def:type Hopac.Alt) (events in Concurrent ML). Alternative object represents a first-class selective operation with possibility to use nack message for not selected concurrent operations (where we used compensation transaction). It was a little bit hard to understand how they work and I implemented them using only fsharp async. Hope it would be helpful for someone.
 {% highlight fsharp %}
 open System
 
@@ -382,12 +382,14 @@ module Alt =
             let nack1 = Promise.create()
             let nack2 = Promise.create()
             let wrkfl1 = async{
-                            let! v = a |> extract <| (AsyncExt.choice [nack1.future;nack])
+                            let! v = a |> extract 
+                            		<| (AsyncExt.choice [nack1.future;nack])
                             nack2.signal()
                             return v
                         }
             let wrkfl2 = async{
-                            let! v = b |> extract <| (AsyncExt.choice [nack2.future;nack])
+                            let! v = b |> extract 
+                            		<| (AsyncExt.choice [nack2.future;nack])
                             nack1.signal()
                             return v
                         }
@@ -450,17 +452,20 @@ let unwrap_server (Server e) = e
 let rand = new System.Random(DateTime.Now.Millisecond)
 let rec server (x:int) (send_resp: int -> Async<unit>) : Server<int> = 
     Server( 
-        withNack <| fun nack -> async{
-                                let alt =  Alt.choose (wrap(guard(nack), fun _ -> x)
-                                                       ,wrap(guard(send_resp(x)), fun _ -> x + 1)) 
-                                let! x = run alt 
-                                return server x send_resp
-                            })
+        withNack <| 
+       		fun nack -> async{
+                let alt =  Alt.choose (wrap(guard(nack), fun _ -> x)
+                                       ,wrap(guard(send_resp(x)), fun _ -> x + 1)) 
+                let! x = run alt 
+                return server x send_resp
+            })
 
 let rec poll_client (rcv_resp: unit -> Async<int>) (server:Server<int>) (server2:Server<int>) (acc: int list) : Async<int list> = async{
         if List.length acc > 10 then return acc
-        else let new_serv = choose(wrap(unwrap_server server, fun new_serv -> new_serv, server2)
-                                  ,wrap(unwrap_server server2, fun new_serv -> new_serv, server))
+        else let new_serv = choose(wrap(unwrap_server server, 
+        				fun new_serv -> new_serv, server2)
+                                  ,wrap(unwrap_server server2, 
+                                  	fun new_serv -> new_serv, server))
              let! s1,s2 = run new_serv
              let! msg = rcv_resp()
              return! poll_client rcv_resp s1 s2 (msg::acc)
