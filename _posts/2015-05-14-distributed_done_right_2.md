@@ -334,4 +334,6 @@ Unfortunately I have no enough time for this blog so actors will arrive only in 
 Recommendation for Further Reading: [Programming in Hopac](https://github.com/Hopac/Hopac/blob/master/Docs/Programming.md) suggested by [Vasily Kirichenko](https://twitter.com/kot_2010). 
 #Update 2
 Hopac library has an intersting concept of [Alternatives](http://hopac.github.io/Hopac/Hopac.html#def:type Hopac.Alt) (events in Concurrent ML). Alternative object represents a first-class selective operation with possibility to use nack message for not selected concurrent operations (where we used compensation transaction). It was a little bit hard to understand how they work and I implemented them using only fsharp async. Hope it would be helpful for someone. [Code](https://gist.github.com/hodzanassredin/21cedfa2815735f8880e) contains atomic version of BlockingQueueAgent and some examples. 
+#Update 3
+There is is a [reference implementation](https://github.com/intellifactory/websharper.hopac/blob/master/websharper.hopac/Hopac.fsi) of Hopac in fsharp, created by [Anton Tayanovskyy](https://twitter.com/t0yv0) for WebSharper project.
 
