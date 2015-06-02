@@ -109,6 +109,8 @@ You can find more documentation [here](http://dotnet.github.io/orleans/). Orlean
 [Orleans and Akka Actors: A Comparison(Roland Kuhn)](https://github.com/akka/akka-meta/blob/master/ComparisonWithOrleans.md)
 3. Akka.net
 This is a port of well known Akka fromework. So a lot of documentation and uses in production. Current version of Akka.net is suitable for production use. This implementation is not so abstract as Orleans and gives us less guaranties and more control. Intergation with fsharp implemented as "actor" computation expression. Lets check hello world in akka.net.
+[Akka.FSharp.HotLoad](https://github.com/akkadotnet/akka.net/issues/542)
+[Akka.NET Remote Deployment With F#](http://bartoszsypytkowski.com/blog/2014/12/14/fsharp-akka-remote-deploy/)
 {% highlight fsharp %}
 {% endhighlight %}
 #No Silver Bullet
