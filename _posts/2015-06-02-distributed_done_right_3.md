@@ -104,7 +104,9 @@ let main argv =
 {% endhighlight %}
 As you can see you have to use "task" computation builder instead of "async" we have to use it to prevent problems with orlean's custom task scheduler. In fsharp Mailbox this problem doesn't exist because we are in a loop and only way to break it to   
 You can find more documentation [here](http://dotnet.github.io/orleans/). Orleankka introduction is [here](https://medium.com/@AntyaDev/introduction-to-orleankka-5962d83c5a27)
-
+[Translating async-await C# code to F# with respect to the scheduler](http://stackoverflow.com/questions/24813359/translating-async-await-c-sharp-code-to-f-with-respect-to-the-scheduler)
+[A look at Microsoft Orleans through Erlang-tinted glasses](http://theburningmonk.com/2014/12/a-look-at-microsoft-orleans-through-erlang-tinted-glasses/)
+[Orleans and Akka Actors: A Comparison(Roland Kuhn)](https://github.com/akka/akka-meta/blob/master/ComparisonWithOrleans.md)
 3. Akka.net
 This is a port of well known Akka fromework. So a lot of documentation and uses in production. Current version of Akka.net is suitable for production use. This implementation is not so abstract as Orleans and gives us less guaranties and more control. Intergation with fsharp implemented as "actor" computation expression. Lets check hello world in akka.net.
 {% highlight fsharp %}
