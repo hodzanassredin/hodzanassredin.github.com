@@ -11,13 +11,13 @@ tags : [fsharp, distributed, actor, protocols]
 <p class="meta">02 June 2015 &#8211; Karelia</p>
 
 In a previous [post](http://hodzanassredin.github.io/2015/05/14/distributed_done_right_2.html) we found a great way to compose our concurrent processes with csp. Our implementation was not perfect and if you want to use this style of communication in production then you have to check [Hopac library](https://github.com/Hopac/Hopac). But there is another way Actors.
-We will discuss mainly actor implementations but not theories because I've no PhD in cs. There are a lot of materials in the web about actors and I don't want to write another one (like I did with [monads](http://hodzanassredin.github.io/2014/06/21/yet-another-monad-guide.html)) so it is a boring link post.
+We will discuss mainly actor implementations, but not theories, because I've no PhD in CS. There are a lot of materials in the web about actors and I don't want to write another one (like I did with [monads](http://hodzanassredin.github.io/2014/06/21/yet-another-monad-guide.html)) so it is a boring link post.
 #Description
 Actors can be described as a process with an input unbounded queue.
 Actor can react to messages from its input queue and change its state. Actor system guaranties that only one instance of actor is working at the same time (if actor is statefull). So there is no concurrent access to actor's state. Also actors can create other actors and so on. 
 
 #Why actors?
-There is a well-known way to distribute and parallelize work in a real world: async servers. What is an async server? It is a process which can accept request from a client and return response after some time[request–reply pattern](http://en.wikipedia.org/wiki/Request%E2%80%93response). It will not block requester as a CSP process, but will try to handle as much requests as possible. If one instance is not enough, we should increase instances count and put a load balancer in front of them. In case when there is no enough resources to handle requests right now, then all messages will be stored in the input queue and processed later. if we have some real world limitation of our input queue size(limited by server's memory) then we could throttle messages and probably return an error to a client or back our queue by a real unbounded queue for example Azure Storage queue. Clients also can use fire and forget pattern in that case server don't have to send a response at al.
+There is a well-known way to distribute and parallelize work in a real world: async servers. What is an async server? It is a process which can accept request from a client and return response after some time [request–reply pattern](http://en.wikipedia.org/wiki/Request%E2%80%93response). It will not block requester as a CSP process, but will try to handle as much requests as possible. If one instance is not enough, we should increase instances count and put a load balancer in front of them. In case when there is no enough resources to handle requests right now, then all messages will be stored in the input queue and processed later. if we have some real world limitation of our input queue size(limited by server's memory) then we could throttle messages and probably return an error to a client or back our queue by a real unbounded queue for example Azure Storage queue. Clients also can use fire and forget pattern in that case server don't have to send a response at al.
 Actors uses the same way to do their work, so it is easy to understand them. Also if you have a class then it could be trivially implemented as an actor, because all classes follows request/response pattern. So it is easy for programmers to use them.
 
 #Why not multiple channels like in csp?
@@ -28,7 +28,7 @@ Because of guarded choice operator which is not easy to implement and has some p
 3. Efficiency. The use of synchronous channels can require a large number of communications in order to get messages from multiple channels in a guarded choice command.
 
 #Why not a synchronous (bounded channel)?
-Because it is harder to implement bounded channel. Main idea that we start from the simplest construct and add additional features on top of it. It is the same as tcp vs udp. Everyone is using tcp protocol, but after working with a protocol for remote controlled cars, it is clear for me, that it is a bad idea to use tcp(when you are limited in resources). It adds a lot of handshakes and not needed guaranties. You just can't remove handshakes. There a lot of questions on stackoverflow  “Why my super cool tcp based IoT protocol eats money from sim cards like a hungry shark?” After some time you are will start to investigate udp and will found that it is a perfect fit. It easier to understand, easier to add handshaking on top of it, easier to work with. As we saw in a previous post BlockingQueueAgent adds possibility to use an actor as a bounded queue.
+Because it is harder to implement bounded channel. Main idea that we start from the simplest construct and add additional features on top of it. It is the same as tcp vs udp. Everyone is using tcp protocol, but after working with a protocol for remote controlled cars, it is clear for me, that it is a bad idea to use tcp(when you are limited in resources). It adds a lot of handshakes and not needed guaranties. You just can't remove handshakes. There a lot of questions on stackoverflow  “Why my super cool tcp based IoT protocol eats money from sim cards like a hungry shark?” After some time you will start to investigate udp and will found that it is a perfect fit. It easier to understand, easier to add handshaking on top of it, easier to work with. As we saw in a previous post BlockingQueueAgent adds possibility to use an actor as a bounded queue.
 
 #Is it Agent?
 No actors are not Agents. For example agents in Clojure. In Agents the behavior is defined outside and is pushed to the Agent, and in Actors the behavior is defined inside the Actor.
@@ -36,6 +36,7 @@ Also "agent" is used (as name) in  ConcurrentConstraintProgramming and ReactiveD
 
 #Implementations
 There are several actor implementations for fsharp.
+
 1. MailboxProcessor is well documented and widely used.
 
 Let’s write a simple Logging actor 
