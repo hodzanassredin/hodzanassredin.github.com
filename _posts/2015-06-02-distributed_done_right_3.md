@@ -37,7 +37,7 @@ Also "agent" is used (as name) in  ConcurrentConstraintProgramming and ReactiveD
 #Implementations
 There are several actor implementations for fsharp.
 
-1. #[MailboxProcessor]() 
+1. #[MailboxProcessor](https://msdn.microsoft.com/library/ee370357.aspx) 
 Well documented and widely used.
 Let’s write a simple Logging actor. 
 {% highlight fsharp %}
