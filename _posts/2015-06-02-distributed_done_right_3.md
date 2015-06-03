@@ -140,7 +140,7 @@ Orleans is an actor framework from Microsoft. Its main ideas are virtual actors 
 
 So in short it has main aim: simplify distributed programming for developers without any knowledge of distributed programming and messaging patterns. So they are created an abstraction on top of actors. Imho it is something like Asp.Net WebForms which emulates statefull controls and pages on top of stateless protocol. Web forms are simple on start, but is a total mess in a difficult scenarios. Ajax UpdatePanel is a monster, it is still trying to destroy my projects in my nightmares. 
 Orleans uses code generation for proxy classes’ creation and uses custom task scheduler. Both of them have some pros and cons.
-For example currently it is not an easy task to use fshrp Async with custom task scheduler. More info [here](https://github.com/dotnet/orleans/issues/38) and [here](http://stackoverflow.com/questions/24813359/translating-async-await-c-sharp-code-to-f-with-respect-to-the-scheduler). There is a project [Orleankka](https://github.com/yevhen/Orleankka)which tries to address some problems and do orleans programming more akka like. 
+For example currently it is not an easy task to use fsharp's Async with custom task scheduler. More info [here](https://github.com/dotnet/orleans/issues/38) and [here](http://stackoverflow.com/questions/24813359/translating-async-await-c-sharp-code-to-f-with-respect-to-the-scheduler). There is a project [Orleankka](https://github.com/yevhen/Orleankka)which tries to address some problems and do orleans programming more akka like. 
 Simple Hello World actor in orleans
 {% highlight fsharp %}
 open System
