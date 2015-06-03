@@ -314,10 +314,12 @@ sameGreeter.Post("Greeter via instance from Ractor.GetActor")
 #What to choose
 Extremely hard question, but I hope now it is more clear for you, how to choose one or another. I prefer to use mailbox processors(MB) and akka.net. You can start from fsx with MB and after that, move your code into a project (using [ProjectScaffold](https://github.com/fsprojects/ProjectScaffold)) and add remoting capabilities by converting(it is simple) your MB actors into akka.net actors.
 #No Silver Bullet
-Actors and csp are great tools to simplify concurrent programming. They limits shared state, so you don't have to worry about Visibility and Ordering and you don't have to use memory barriers and think about caches and processor’s registers. If you forgot about these kind of problems, so it is time to refresh your memory by reading a [chapter](http://www.albahari.com/threading/part4.aspx) form [Threading in C#](http://www.albahari.com/threading/). Strongly recommend to read, if you want to be a low level concurrency ninja.  
-You don't even have to use locks. Also actors are solves additional problems of scalability, transparency and inconsistency. That's great. But can you relax and write stuff without thinking? Unfortunately no. Deadlocks, Starvation, Live-locks and Race Conditions is still here, we will check them in future blog posts and will check how to use other abstractions to prevent them.
+Actors and csp are great tools to simplify concurrent programming. They limits shared state, so you don't have to worry about Visibility and Ordering and you don't have to use memory barriers and think about caches and processor’s registers. If you forgot about this kind of problems then it is time to refresh your memory by reading a [chapter](http://www.albahari.com/threading/part4.aspx) form [Threading in C#](http://www.albahari.com/threading/). Strongly recommend to read this book, if you want to be a low level concurrency ninja.  
+You don't even have to use locks. Also actors are solves additional problems of scalability, transparency and inconsistency. That's great. But can you relax and write stuff without thinking? Unfortunately you can't. Deadlocks, Starvation, Live-locks and Race Conditions is still here, we will check them in future blog posts and will check how to use other abstractions to prevent them.
 
 Next part will be about Protocols, but it is summer time and I have almost zero feedback to my previous posts, so it will be eventually soon. ;)
+
+Comments and critics are welcome.
 
 #Recommended reading:
 1. [An Introduction and Developer’s Guide to Cloud Computing with MBrace](http://www.m-brace.net/mbrace-manual.pdf)
