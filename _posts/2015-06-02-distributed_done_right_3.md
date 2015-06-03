@@ -39,7 +39,7 @@ Also "agent" is used (as name) in  ConcurrentConstraintProgramming and ReactiveD
 #Implementations
 There are several actor implementations for fsharp.
 
-1. #[MailboxProcessor](https://msdn.microsoft.com/library/ee370357.aspx) 
+#[MailboxProcessor](https://msdn.microsoft.com/library/ee370357.aspx) 
 Well documented and widely used.
 Let’s write a simple Logging actor. 
 {% highlight fsharp %}
@@ -60,7 +60,7 @@ type Logger() =
 This simple actor are wrapped into a class and can be used as a regular object. More info in [blog posts form Don Syme's WebLog](http://blogs.msdn.com/b/dsyme/archive/2010/02/15/async-and-parallel-design-patterns-in-f-part-3-agents.aspx) and [Messages and Agents(F# for fun and profit)](http://fsharpforfunandprofit.com/posts/concurrency-actor-model/)
 Mailbox processor has no built in ability to be distributed.
 
-2. #[FSharp.CloudAgent](http://isaacabraham.github.io/FSharp.CloudAgent/) 
+#[FSharp.CloudAgent](http://isaacabraham.github.io/FSharp.CloudAgent/) 
 
 It uses Azure Service Bus as a transport. More info [Distributing the F# Mailbox Processor](https://cockneycoder.wordpress.com/2014/12/04/distributing-the-f-mailbox-processor/)
 
@@ -85,7 +85,7 @@ let createASimpleAgent agentId =
         })
 {% endhighlight %}
 
-3. #[Orleans](https://github.com/dotnet/orleans).
+#[Orleans](https://github.com/dotnet/orleans).
 
 Orleans is an actor framework from Microsoft. Its main ideas are virtual actors and actor representation as an OOP class.
 ##Virtual actors
@@ -189,7 +189,7 @@ let main argv =
 As you can see, there is a "task" computation builder instead of "async", we have to use it to prevent problems with Orleans’s custom task scheduler (deadlocking).    
 You can find more documentation [here](http://dotnet.github.io/orleans/). Orleankka introduction is [here](https://medium.com/@AntyaDev/introduction-to-orleankka-5962d83c5a27)
 
-4. #[Akka.net](http://getakka.net/)
+#[Akka.net](http://getakka.net/)
 
 This is a port of a well-known Akka framework. So a lot of documentation and usages in production. Current version of Akka.net is suitable for production use. This implementation is not as abstract as Orleans and gives us less guaranties and more control. Integration with fsharp implemented as "actor" computation expression. Let’s check hello world in akka.net.
 {% highlight fsharp %}
@@ -210,7 +210,7 @@ There are some comparisons of akka, erlang vs orleans. It is worth reading.
 [Orleans and Akka Actors: A Comparison(Roland Kuhn)](https://github.com/akka/akka-meta/blob/master/ComparisonWithOrleans.md)
 [Orleans, Distributed Virtual Actors for Programming and Scalability Comparison](http://christophermeiklejohn.com/papers/2015/05/03/orleans.html)
 
-5. #[Thespian](http://nessos.github.io/Thespian/)
+#[Thespian](http://nessos.github.io/Thespian/)
 
 This is an internal project of Nessos company, it is a part of [MBrace](http://www.m-brace.net/) stack. MBrace is a king of distributed computations and it is a huge win for fsharp community to have it. There are some other extremely useful tools from Nessos [FsPickler](http://nessos.github.io/FsPickler/), [Vagabond](http://nessos.github.io/Vagabond/), [Streams](https://github.com/nessos/Streams)...
 
@@ -244,7 +244,7 @@ let post v = actor.Ref <!= fun ch -> Msg(ch, v)
 post 42
 {% endhighlight %}
 
-5. #[Cricket](http://fsprojects.github.io/Cricket/)
+#[Cricket](http://fsprojects.github.io/Cricket/)
 
 quote form [Introducing Cricket (formerly FSharp.Actor)](http://www.colinbull.net/2014/11/06/Introducing-Cricket/)
 > Cricket, formerly FSharp.Actor, is yet another actor framework. 
@@ -276,7 +276,7 @@ let greeter =
 {% endhighlight %}
 
 
-5. #[Ractor.CLR](https://github.com/buybackoff/Ractor.CLR)
+#[Ractor.CLR](https://github.com/buybackoff/Ractor.CLR)
 
 It is not an actor framework, but very close to actors, it uses process-oriented programming paradigm. In short it is very close to orlean's Virtual Actors. in Ractor actors are virtual and exist in Redis per se as lists of messages, while a number of ephemeral workers (actors' "incarnations") take messages from Redis, process them and post results back.
 {% highlight fsharp %}
