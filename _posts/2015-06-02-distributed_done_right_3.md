@@ -28,6 +28,7 @@ Because of guarded choice operator which is not easy to implement and has some p
 3. Efficiency. The use of synchronous channels can require a large number of communications in order to get messages from multiple channels in a guarded choice command.
 
 #Why not a synchronous (bounded channel)?
+
 Because it is harder to implement bounded channel. Main idea that we start from the simplest construct and add additional features on top of it. It is the same as tcp vs udp. Everyone is using tcp protocol, but after working with a protocol for remote controlled cars, it is clear for me, that it is a bad idea to use tcp(when you are limited in resources). It adds a lot of handshakes and not needed guaranties. You just can't remove handshakes. There a lot of questions on stackoverflow  “Why my super cool tcp based IoT protocol eats money from sim cards like a hungry shark?” After some time you will start to investigate udp and will found that it is a perfect fit. It easier to understand, easier to add handshaking on top of it, easier to work with. As we saw in a previous post BlockingQueueAgent adds possibility to use an actor as a bounded queue.
 
 #Is it Agent?
