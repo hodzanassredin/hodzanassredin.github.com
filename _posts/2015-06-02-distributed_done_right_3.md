@@ -1,7 +1,7 @@
 ---
 published: false
 layout: post
-title: Distributed computing done right? Actors and protocols.
+title: Distributed computing done right? Actors.
 tags : [fsharp, distributed, actor, protocols]
 ---
 
@@ -10,34 +10,35 @@ tags : [fsharp, distributed, actor, protocols]
 
 <p class="meta">02 June 2015 &#8211; Karelia</p>
 
-In a previous post we found a great way to compose our concurrent processes with csp. Our implementation was not perfect and if you want to use this style of communication in production then you have to check [Hopac library](https://github.com/Hopac/Hopac). But there is another way Actors.
-We will discuss mainly actor implementations but not theories because I've no phd in cs. 
+In a previous [post](http://hodzanassredin.github.io/2015/05/14/distributed_done_right_2.html) we found a great way to compose our concurrent processes with csp. Our implementation was not perfect and if you want to use this style of communication in production then you have to check [Hopac library](https://github.com/Hopac/Hopac). But there is another way Actors.
+We will discuss mainly actor implementations but not theories because I've no phd in cs. There are a lot of materials in the web about actors and I don't want to write another one(like I do with [monads](http://hodzanassredin.github.io/2014/06/21/yet-another-monad-guide.html)) so it is a boring link post.
 #Description
-Actors can be described as a proccess with input unbounded queue.
-Actor can react to messages from it's input queue and change his state. Actor system guaranties that only one instance of actor is working at the same time. So there is no concurrent access to actor's state.
+Actors can be described as a proccess with an input unbounded queue.
+Actor can react to messages from it's input queue and change it's state. Actor system guaranties that only one instance of actor is working at the same time(if actor is statefull). So there is no concurrent access to actor's state. Also actors can create other actors and so on. 
 
 #Why actors?
-There is a well known way to distribute and parallelize work in a real world we are working with async servers. What is an async server? It is a proccess which can accept request from a client and return response after some time[request–reply pattern](http://en.wikipedia.org/wiki/Request%E2%80%93response). It will not block requester as an CSP proccess, but will try to handle as much requests as possible. If one instance is not enought, we should increase instances count and put a load ballancer in front of them. In case when there is no enought resources to handle requests right now then all messages will be stored in input queue and proccessed later. if we have some real world limitation of our input queue size(limited by server's memory) then we could throtle messages and probably return an error to a client or back our queue by a really unbounded queue for example Azure Storage queue. Clients also can use fire and forget pattern in that case server don't have to send a response.
-Actors uses the same way to do their work. It is easy to understand how they work. Also if you have an class then it could be trivially implemented as actor becouse any class follows request/response pattern. So it is easy to programmers to adopt.
+There is a well known way to distribute and parallelize work in a real world, async servers. What is an async server? It is a proccess which can accept request from a client and return response after some time[request–reply pattern](http://en.wikipedia.org/wiki/Request%E2%80%93response). It will not block requester as an CSP proccess, but will try to handle as much requests as possible. If one instance is not enought, we should increase instances count and put a load ballancer in front of them. In case when there is no enought resources to handle requests right now then all messages will be stored in the input queue and proccessed later. if we have some real world limitation of our input queue size(limited by server's memory) then we could throtle messages and probably return an error to a client or back our queue by a real unbounded queue for example Azure Storage queue. Clients also can use fire and forget pattern in that case server don't have to send a response at al.
+Actors uses the same way to do their work, so it is easy to understand how they work. Also if you have a class then it could be trivially implemented as an actor, because any class follows request/response pattern. So it is easy for programmers to use them.
+
 #Why not multiple channels like in csp?
 Becouse of guarded choice operator which is not easy to implement and has some problems:
 
 1. Starvation. The use of sychronous channels can cause starvation when a process attempts to get messages from multiple channels in a guarded choice command. For example you can take values only from one channel and not from other.
 2. Livelock. The use of synchronous channels can cause a process to be caught in livelock when it attempts to get messages from multiple channels in a guarded choice command.
-Efficiency. The use of synchronous channels can require a large number of communications in order to get messages from multiple channels in a guarded choice command.
+3. Efficiency. The use of synchronous channels can require a large number of communications in order to get messages from multiple channels in a guarded choice command.
 
 #Why not a synchronouse(bounded channel)?
-Because it is harder to implement bounded channel. Main idea that we start from the most simple construct and adds additional features on top of it. 
-It is the same as tcp vs udp. Everyone is using tcp protocol but after working with remote conteolled cars protocol, it is clear for me that it just impossible to use tcp. It adds a lot of handshakes and usually not needed guaranties. It behaves like a leaky abstraction. When you can't remove that crazy handshaking. There a lot of questions in stackoverflow Why my super cool tcp based IoT protocol eats money from clients sim card like a hungry shark. After some time you are starting to investigate udp and found that it is a perfect fit. It easier to understand, easier to add hanshaking on top of it, easier to work with. As we saw in a previous post BlockingQueueAgent added posiiblity to use an actor as a bounded queue.
+Because it is harder to implement bounded channel. Main idea that we start from the most simple construct and adds additional features on top of it. It is the same as tcp vs udp. Everyone is using tcp protocol, but after working with remote conteolled cars protocol, it is clear for me, that it is a bad idea to use tcp. It adds a lot of handshakes and usually not needed guaranties. You just can't remove handshakes. There a lot of questions in stackoverflow Why my super cool tcp based IoT protocol eats money from sim cards like a hungry shark. After some time you are starting to investigate udp and found that it is a perfect fit. It easier to understand, easier to add hanshaking on top of it, easier to work with. As we saw in a previous post BlockingQueueAgent which adds posiiblity to use an actor as a bounded queue.
 
 #Is it Agent?
-No actors are not Agents. For example agents in clojure.  In Agents the behavior is defined outside and is pushed to the Agent, and in Actors the behavior is defined inside the Actor.
-Also agents are used as units in  ConcurrentConstraintProgramming or ReactiveDemandProgramming and has completely different behaviour check [this](http://c2.com/cgi/wiki?ActorVsAgent)
+No actors are not Agents. For example agents in clojure. In Agents the behavior is defined outside and is pushed to the Agent, and in Actors the behavior is defined inside the Actor.
+Also "agent" is used(as name) in  ConcurrentConstraintProgramming or ReactiveDemandProgramming and has completely different meaning, check [this](http://c2.com/cgi/wiki?ActorVsAgent)
+
 #Implementations
-There are several actors implementations for fsharp.
+There are several actor implementations for fsharp.
 1. MailboxProccessor is well documented and widely used.
 
-Lets define some simple Logging actor 
+Lets write a simple Logging actor 
 {% highlight fsharp %}
 type Logger() =
     let logger = MailboxProcessor<string>.Start(
@@ -51,6 +52,7 @@ type Logger() =
                             loop ())
     member x.Log msg = logger.Post(msg)
 {% endhighlight %}
+
 This simple actor are wrapped into a class and can be used as a regular object. More info in [blog posts](http://blogs.msdn.com/b/dsyme/archive/2010/02/15/async-and-parallel-design-patterns-in-f-part-3-agents.aspx) form  Don Syme's WebLog.
 Mailbox proccesor has no built in ability to be distributed.
 
@@ -134,9 +136,9 @@ Orleans is an actors framework from Microsoft. It's main ideas are virtual actor
 > worker mode is appropriate for actors with immutable or
 > no state, such as an actor that acts as a read-only cache
 
-So in short it has main aim: simplify distributed programming for developers without any knowledge of distributed programming and messaging patterns. So they are created an abstraction on top of actors. Imho it is something like Asp.Net WebForms which emulates statefull controls and pages on top of stateless protocol. Web forms are simple on start but is a total mess in a difficult scenarios. Ajax UpdatePanel is a monster, it sometimes trying to catch me in my nightmares. 
-Orleans uses code generation for proxy classes creation and usese custom task scheduler. Both of them have some drawbacks.
-It is not an easy taks to use fshrp Async with custom task scheduler More info [here](https://github.com/dotnet/orleans/issues/38) and [here](http://stackoverflow.com/questions/24813359/translating-async-await-c-sharp-code-to-f-with-respect-to-the-scheduler). There is a project [Orleankka](https://github.com/yevhen/Orleankka)which tries to address some problems and do orleans programming more akka like. 
+So in short it has main aim: simplify distributed programming for developers without any knowledge of distributed programming and messaging patterns. So they are created an abstraction on top of actors. Imho it is something like Asp.Net WebForms which emulates statefull controls and pages on top of stateless protocol. Web forms are simple on start but is a total mess in a difficult scenarios. Ajax UpdatePanel is a monster, it is still trying to destoy my project in my nightmares. 
+Orleans uses code generation for proxy classes creation and usese custom task scheduler. Both of them have some pros and cons.
+For example currently it is not an easy task to use fshrp Async with custom task scheduler. More info [here](https://github.com/dotnet/orleans/issues/38) and [here](http://stackoverflow.com/questions/24813359/translating-async-await-c-sharp-code-to-f-with-respect-to-the-scheduler). There is a project [Orleankka](https://github.com/yevhen/Orleankka)which tries to address some problems and do orleans programming more akka like. 
 Simple Hello World actor in orleans
 {% highlight fsharp %}
 open System
@@ -182,10 +184,10 @@ let main argv =
     Console.ReadLine() |> ignore    
     0
 {% endhighlight %}
-As you can see that you have to use "task" computation builder instead of "async", we have to use it to prevent problems with orlean's custom task scheduler.    
+As you can see, you have to use "task" computation builder instead of "async", we have to use it to prevent problems with orlean's custom task scheduler(deadlocking).    
 You can find more documentation [here](http://dotnet.github.io/orleans/). Orleankka introduction is [here](https://medium.com/@AntyaDev/introduction-to-orleankka-5962d83c5a27)
 4. [Akka.net](http://getakka.net/)
-This is a port of well known Akka fromework. So a lot of documentation and usages in production. Current version of Akka.net is suitable for production use. This implementation is not so abstract as Orleans and gives us less guaranties and more control. Intergation with fsharp implemented as "actor" computation expression. Lets check hello world in akka.net.
+This is a port of a well known Akka fromework. So a lot of documentation and usages in production. Current version of Akka.net is suitable for production use. This implementation is not so abstract as Orleans and gives us less guaranties and more control. Integration with fsharp implemented as "actor" computation expression. Lets check hello world in akka.net.
 {% highlight fsharp %}
 let aref =
     spawn system "my-actor"
@@ -237,6 +239,7 @@ let post v = actor.Ref <!= fun ch -> Msg(ch, v)
 post 42
 {% endhighlight %}
 5. [Cricket](http://fsprojects.github.io/Cricket/)
+quote form [Introducing Cricket (formerly FSharp.Actor)](http://www.colinbull.net/2014/11/06/Introducing-Cricket/)
 > Cricket, formerly FSharp.Actor, is yet another actor framework. 
 > Built entirely in F#, Cricket is a lightweight alternative to Akka 
 > et. al. To this end it is not as feature rich as these out of 
@@ -244,7 +247,7 @@ post 42
 > remoting, supervisors, metrics and tracing. Other things 
 > like failure detection and clustering are in the pipeline 
 > it is just a question of time.
-quote form [Introducing Cricket (formerly FSharp.Actor)](http://www.colinbull.net/2014/11/06/Introducing-Cricket/)
+
 {% highlight fsharp %}
 let greeter = 
     actor {
@@ -299,9 +302,10 @@ sameGreeter.Post("Greeter via instance from Ractor.GetActor")
 {% endhighlight %}
 
 #What to choose
-Extremely hard question, but I hope now it is more clear for you how to choose one or another. I prefere to use mailbox proccessors(MB) and akka.net. You can start from fsx with MB and after that, move your code into a project (using [ProjectScaffold](https://github.com/fsprojects/ProjectScaffold)) and add remoting capabilites by converting(it is simple) your MB actors into akka.net actors.
+Extremely hard question, but I hope now it is more clear for you, how to choose one or another. I prefere to use mailbox proccessors(MB) and akka.net. You can start from fsx with MB and after that, move your code into a project (using [ProjectScaffold](https://github.com/fsprojects/ProjectScaffold)) and add remoting capabilites by converting(it is simple) your MB actors into akka.net actors.
 #No Silver Bullet
-Actors and csp are great tools to simplify concurrent programming. They uses queues which solves 
+Actors and csp are great tools to simplify concurrent programming. They limits shared state, so you don't have to worry about Visibilty and Ordering and you don't have to use memory barriers and think about caches and proccessor's registers. If you forgot about these kind of problems, so it is time to refresh your memory by reading a [chapter](http://www.albahari.com/threading/part4.aspx) form [Threading in C#](http://www.albahari.com/threading/). Strongly recommend to read, if you want to be a low level concurrency ninja.  
+You don't even have to use locks. Also actors are solves additional problems of scalability, transparency and inconsistency. That's great. But can you relax and write stuff without thinking? Unfortunately no. Deadlocks, Starvation, Live-locks and Race Conditions is still here, we will check them in future blog posts and will check how to use other abstractions to prevent them.
 
-{% highlight fsharp %}
-{% endhighlight %}
+Next part will be about Protocols, but it is summer time and I have almost zero feedback to my previous posts, so it will be eventually soon. ;)
+
