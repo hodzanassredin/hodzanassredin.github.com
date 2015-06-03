@@ -37,27 +37,31 @@ Also "agent" is used (as name) in  ConcurrentConstraintProgramming and ReactiveD
 #Implementations
 There are several actor implementations for fsharp.
 
-1. ##MailboxProcessor is well documented and widely used.
-
-Let’s write a simple Logging actor 
+1. ##MailboxProcessor 
+Well documented and widely used.
+Let’s write a simple Logging actor. 
 {% highlight fsharp %}
 type Logger() =
-    let logger = MailboxProcessor<string>.Start(
-                    fun inbox ->
-                            let rec loop () =
-                                async {
-                                        let! msg = inbox.Receive();
-                                        printfn "%s: %s" (DateTime.Now.ToString()) msg
-                                        return! loop ()
-                                }
-                            loop ())
+    let logger = 
+    	MailboxProcessor<string>.Start(
+            fun inbox ->
+                    let rec loop () =
+                        async {
+                                let! msg = inbox.Receive();
+                                printfn "%s: %s" (DateTime.Now.ToString()) msg
+                                return! loop ()
+                        }
+                    loop ())
     member x.Log msg = logger.Post(msg)
 {% endhighlight %}
 
 This simple actor are wrapped into a class and can be used as a regular object. More info in [blog posts](http://blogs.msdn.com/b/dsyme/archive/2010/02/15/async-and-parallel-design-patterns-in-f-part-3-agents.aspx) form  Don Syme's WebLog.
 Mailbox processor has no built in ability to be distributed.
 
-2. [FSharp.CloudAgent](http://isaacabraham.github.io/FSharp.CloudAgent/) - uses Azure Service Bus as a transport. More info [Distributing the F# Mailbox Processor](https://cockneycoder.wordpress.com/2014/12/04/distributing-the-f-mailbox-processor/)
+2. #[FSharp.CloudAgent](http://isaacabraham.github.io/FSharp.CloudAgent/) 
+
+It uses Azure Service Bus as a transport. More info [Distributing the F# Mailbox Processor](https://cockneycoder.wordpress.com/2014/12/04/distributing-the-f-mailbox-processor/)
+
 {% highlight fsharp %}
 open FSharp.CloudAgent
 open FSharp.CloudAgent.Messaging
@@ -85,7 +89,9 @@ let cloudConnection = WorkerCloudConnection(serviceBusConnection, Queue "myMessa
 // Service bus messages will be automatically deserialised into the required message type.
 ConnectionFactory.StartListening(cloudConnection, createASimpleAgent >> BasicCloudAgent)
 {% endhighlight %}
-3. Orleans.
+
+3. #[Orleans](https://github.com/dotnet/orleans).
+
 Orleans is an actor framework from Microsoft. Its main ideas are virtual actors and actor representation as an OOP class.
 ##Virtual actors
 > 1. Perpetual existence: actors are purely logical
@@ -187,7 +193,9 @@ let main argv =
 {% endhighlight %}
 As you can see, there is a "task" computation builder instead of "async", we have to use it to prevent problems with Orleans’s custom task scheduler (deadlocking).    
 You can find more documentation [here](http://dotnet.github.io/orleans/). Orleankka introduction is [here](https://medium.com/@AntyaDev/introduction-to-orleankka-5962d83c5a27)
-4. [Akka.net](http://getakka.net/)
+
+4. #[Akka.net](http://getakka.net/)
+
 This is a port of a well-known Akka framework. So a lot of documentation and usages in production. Current version of Akka.net is suitable for production use. This implementation is not as abstract as Orleans and gives us less guaranties and more control. Integration with fsharp implemented as "actor" computation expression. Let’s check hello world in akka.net.
 {% highlight fsharp %}
 let aref =
@@ -207,7 +215,8 @@ There are some comparisons of akka, erlang vs orleans. It is worth reading.
 [Orleans and Akka Actors: A Comparison(Roland Kuhn)](https://github.com/akka/akka-meta/blob/master/ComparisonWithOrleans.md)
 [Orleans, Distributed Virtual Actors for Programming and Scalability Comparison](http://christophermeiklejohn.com/papers/2015/05/03/orleans.html)
 
-5. [Thespian](http://nessos.github.io/Thespian/)
+5. #[Thespian](http://nessos.github.io/Thespian/)
+
 This is an internal project of Nessos company, it is a part of [MBrace](http://www.m-brace.net/) stack. MBrace is a king of distributed computations and it is a huge win for fsharp community to have it. There are some other extremely useful tools from Nessos [FsPickler](http://nessos.github.io/FsPickler/), [Vagabond](http://nessos.github.io/Vagabond/),[Streams](https://github.com/nessos/Streams)...
 
 There is a quote from github about current project's state.
@@ -239,7 +248,9 @@ let post v = actor.Ref <!= fun ch -> Msg(ch, v)
 
 post 42
 {% endhighlight %}
-5. [Cricket](http://fsprojects.github.io/Cricket/)
+
+5. #[Cricket](http://fsprojects.github.io/Cricket/)
+
 quote form [Introducing Cricket (formerly FSharp.Actor)](http://www.colinbull.net/2014/11/06/Introducing-Cricket/)
 > Cricket, formerly FSharp.Actor, is yet another actor framework. 
 > Built entirely in F#, Cricket is a lightweight alternative to Akka 
@@ -268,7 +279,9 @@ let greeter =
             loop())
     } |> Actor.spawn
 {% endhighlight %}
-5. [Ractor.CLR](https://github.com/buybackoff/Ractor.CLR)
+
+5. #[Ractor.CLR](https://github.com/buybackoff/Ractor.CLR)
+
 It is not an actor framework, but very close to actors, it uses process-oriented programming paradigm. In short it is very close to orlean's Virtual Actors. in Ractor actors are virtual and exist in Redis per se as lists of messages, while a number of ephemeral workers (actors' "incarnations") take messages from Redis, process them and post results back.
 {% highlight fsharp %}
 #r "Ractor.dll"
