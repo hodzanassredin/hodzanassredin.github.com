@@ -10,7 +10,7 @@ tags : [fsharp, distributed, actor, protocols]
 
 <p class="meta">02 June 2015 &#8211; Karelia</p>
 
-In the previous [post](http://hodzanassredin.github.io/2015/05/14/distributed_done_right_2.html) we found a great way to compose our concurrent processes with csp. Our implementation was not perfect and if you want to use this style of communication in production then you have to check [Hopac library](https://github.com/Hopac/Hopac). But there is another way Actors.
+In a previous [post](http://hodzanassredin.github.io/2015/05/14/distributed_done_right_2.html) we found a great way to compose our concurrent processes with csp. Our implementation was not perfect and if you want to use this style of communication in production then you have to check [Hopac library](https://github.com/Hopac/Hopac). But there is another way Actors.
 We will discuss mainly actor implementations, but not theories, because I've no PhD in CS. There are a lot of materials in the web about actors and I don't want to write another one (like I did with [monads](http://hodzanassredin.github.io/2014/06/21/yet-another-monad-guide.html)) so it is a boring link post.
 #Description
 Actors can be described as a process with an input unbounded queue.
@@ -203,7 +203,7 @@ let aref =
             }
             loop())
 {% endhighlight %}
-I like this code a lot. It uses the same pattern as Fsharp's Mailbox Processor so it is trivial to move your code to akka.net and use akka's benefits. Why "actor" computation expression? Because it allows you to do a remote deployment and do stuff like hot code swap. Internally it uses F# quotations. More details about remote deployments you can find in [Akka.NET Remote Deployment With F#](http://bartoszsypytkowski.com/blog/2014/12/14/fsharp-akka-remote-deploy/). Yes this way to do remote deployment is limited, but they are working on a more interesting Mbrace like deployments [Akka.FSharp.HotLoad](https://github.com/akkadotnet/akka.net/issues/542)
+I like this code a lot. It uses the same pattern as Fsharp's Mailbox Processor so it is trivial to move your code to akka.net and use akka's benefits. Why "actor" computation expression? Because it allows you to do a remote deployment and do stuff like hot code swap. Internally it uses F# quotations. More details about remote deployments you can find in [Akka.NET Remote Deployment With F#](http://bartoszsypytkowski.com/blog/2014/12/14/fsharp-akka-remote-deploy/) and [AKKA.NET: HOW TO REMOTELY DEPLOY ACTORS USING AKKA.REMOTE](https://petabridge.com/blog/akkadotnet-remote-deploy-actors/). Yes this way to do remote deployment is limited, but they are working on a more interesting Mbrace like deployments [Akka.FSharp.HotLoad](https://github.com/akkadotnet/akka.net/issues/542)
 
 There are some comparisons of akka, erlang vs orleans. It is worth reading.
 [A look at Microsoft Orleans through Erlang-tinted glasses](http://theburningmonk.com/2014/12/a-look-at-microsoft-orleans-through-erlang-tinted-glasses/)
