@@ -10,7 +10,7 @@ tags : [fsharp, distributed, actor, protocols]
 
 <p class="meta">02 June 2015 &#8211; Karelia</p>
 
-In a previous [post](http://hodzanassredin.github.io/2015/05/14/distributed_done_right_2.html) we found a great way to compose our concurrent processes with csp. Our implementation was not perfect and if you want to use this style of communication in production then you have to check [Hopac library](https://github.com/Hopac/Hopac). But there is another way Actors.
+In the previous [post](http://hodzanassredin.github.io/2015/05/14/distributed_done_right_2.html) we found a great way to compose our concurrent processes with csp. Our implementation was not perfect and if you want to use this style of communication in production then you have to check [Hopac library](https://github.com/Hopac/Hopac). But there is another way Actors.
 We will discuss mainly actor implementations, but not theories, because I've no PhD in CS. There are a lot of materials in the web about actors and I don't want to write another one (like I did with [monads](http://hodzanassredin.github.io/2014/06/21/yet-another-monad-guide.html)) so it is a boring link post.
 #Description
 Actors can be described as a process with an input unbounded queue.
