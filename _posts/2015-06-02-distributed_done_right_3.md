@@ -34,9 +34,9 @@ It is the same as tcp vs udp. Everyone is using tcp protocol but after working w
 No actors are not Agents. For example agents in clojure.  In Agents the behavior is defined outside and is pushed to the Agent, and in Actors the behavior is defined inside the Actor.
 Also agents are used as units in  ConcurrentConstraintProgramming or ReactiveDemandProgramming and has completely different behaviour check [this](http://c2.com/cgi/wiki?ActorVsAgent)
 #Implementations
-There are 3 main production ready implementations for fsharp.
-1. MailboxProccessor is well documented and widly used.
-Also mailbox pattern is used by other implementations.
+There are several actors implementations for fsharp.
+1. MailboxProccessor is well documented and widely used.
+
 Lets define some simple Logging actor 
 {% highlight fsharp %}
 type Logger() =
@@ -51,12 +51,92 @@ type Logger() =
                             loop ())
     member x.Log msg = logger.Post(msg)
 {% endhighlight %}
-This simple actor are wrapped into a class and can be used as a regular object. Mailbox proccesor has no built in ability to be distributed. More info in a [blog posts](http://blogs.msdn.com/b/dsyme/archive/2010/02/15/async-and-parallel-design-patterns-in-f-part-3-agents.aspx) form  Don Syme's WebLog.
+This simple actor are wrapped into a class and can be used as a regular object. More info in [blog posts](http://blogs.msdn.com/b/dsyme/archive/2010/02/15/async-and-parallel-design-patterns-in-f-part-3-agents.aspx) form  Don Syme's WebLog.
+Mailbox proccesor has no built in ability to be distributed.
 
-2. Orleans.
-Orleans is an actors framework from Microsoft. It\s main idea is virtual actors and actors representation in an OOP style. So it has main aim: simplify distributed programming for developers without any knowledge of distributed programming and messaging patterns. So they are created an abstraction on top of actors. Imho it is something like Asp.Net WebForms which emulates statefull controls and pages on top of stateless protocol. Web forms are simple on start but is a total mess in a difficult scenarios. Ajax UpdatePanel is a monster, it sometimes trying to catch me in my nightmares. 
+2. [FSharp.CloudAgent](http://isaacabraham.github.io/FSharp.CloudAgent/) - uses Azure Service Bus as a tansport. More info [Distributing the F# Mailbox Processor](https://cockneycoder.wordpress.com/2014/12/04/distributing-the-f-mailbox-processor/)
+{% highlight fsharp %}
+open FSharp.CloudAgent
+open FSharp.CloudAgent.Messaging
+open FSharp.CloudAgent.Connections
+
+// Standard Azure Service Bus connection string
+let serviceBusConnection = ServiceBusConnection "servicebusconnectionstringgoeshere"
+
+// A DTO
+type Person = { Name : string; Age : int }
+
+// A function which creates an Agent on demand.
+let createASimpleAgent agentId =
+    MailboxProcessor.Start(fun inbox ->
+        async {
+            while true do
+                let! message = inbox.Receive()
+                printfn "%s is %d years old." message.Name message.Age
+        })
+
+// Create a worker cloud connection to the Service Bus Queue "myMessageQueue"
+let cloudConnection = WorkerCloudConnection(serviceBusConnection, Queue "myMessageQueue")
+
+// Start listening! A local pool of agents will be created that will receive messages.
+// Service bus messages will be automatically deserialised into the required message type.
+ConnectionFactory.StartListening(cloudConnection, createASimpleAgent >> BasicCloudAgent)
+{% endhighlight %}
+3. Orleans.
+Orleans is an actors framework from Microsoft. It's main ideas are virtual actors and actor representation as an OOP class.
+##Virtual actors
+> 1. Perpetual existence: actors are purely logical
+> entities that always exist, virtually. An actor cannot be
+> explicitly created or destroyed and its virtual existence is
+> unaffected by the failure of a server that executes it.
+> Since actors always exist, they are always addressable.
+> 2. Automatic instantiation: Orleans’ runtime
+> automatically creates in-memory instances of an actor
+> called activations. At any point in time an actor may
+> have zero or more activations. An actor will not be
+> instantiated if there are no requests pending for it. When
+> a new request is sent to an actor that is currently not
+> instantiated, the Orleans runtime automatically creates
+> an activation by picking a server, instantiating on that
+> server the .NET object that implements the actor, and
+> invoking its ActivateAsync method for initialization. If
+> the server where an actor currently is instantiated fails,
+> the runtime will automatically re-instantiate it on a new
+> server on its next invocation. This means that Orleans
+> has no need for supervision trees as in Erlang [3] and
+> Akka [2], where the application is responsible for recreating
+> a failed actor. An unused actor’s in-memory 
+> 3 instance is automatically reclaimed as part of runtime
+> resource management. When doing so Orleans invokes
+> the DeactivateAsync method, which gives the actor an
+> opportunity to perform a cleanup operation.
+> 3. Location transparency: an actor may be
+> instantiated in different locations at different times, and
+> sometimes might not have a physical location at all. An
+> application interacting with an actor or running within an
+> actor does not know the actor’s physical location. This is
+> similar to virtual memory, where a given logical memory
+> page may be mapped to a variety of physical addresses
+> over time, and may at times be “paged out” and not
+> mapped to any physical address. Just as an operating
+> system pages in a memory page from disk automatically,
+> the Orleans runtime automatically instantiates a noninstantiated
+> actor upon a new request
+> 4. Automatic scale out: Currently, Orleans supports
+> two activation modes for actor types: single activation
+> mode (default), in which only one simultaneous
+> activation of an actor is allowed, and stateless worker
+> mode, in which many independent activations of an actor
+> are created automatically by Orleans on-demand (up to a
+> limit) to increase throughput. “Independent” implies that
+> there is no state reconciliation between different
+> activations of the same actor. Therefore, the stateless
+> worker mode is appropriate for actors with immutable or
+> no state, such as an actor that acts as a read-only cache
+
+So in short it has main aim: simplify distributed programming for developers without any knowledge of distributed programming and messaging patterns. So they are created an abstraction on top of actors. Imho it is something like Asp.Net WebForms which emulates statefull controls and pages on top of stateless protocol. Web forms are simple on start but is a total mess in a difficult scenarios. Ajax UpdatePanel is a monster, it sometimes trying to catch me in my nightmares. 
 Orleans uses code generation for proxy classes creation and usese custom task scheduler. Both of them have some drawbacks.
-traction when you use uncontrolled library which usese Task.Run which uses thread poll scheduler. More info [here](https://github.com/dotnet/orleans/issues/38). There is a project [Orleankka](https://github.com/yevhen/Orleankka)which tries to remove some problems and do orleans programming more functional. 
+It is not an easy taks to use fshrp Async with custom task scheduler More info [here](https://github.com/dotnet/orleans/issues/38) and [here](http://stackoverflow.com/questions/24813359/translating-async-await-c-sharp-code-to-f-with-respect-to-the-scheduler). There is a project [Orleankka](https://github.com/yevhen/Orleankka)which tries to address some problems and do orleans programming more akka like. 
 Simple Hello World actor in orleans
 {% highlight fsharp %}
 open System
@@ -102,19 +182,126 @@ let main argv =
     Console.ReadLine() |> ignore    
     0
 {% endhighlight %}
-As you can see you have to use "task" computation builder instead of "async" we have to use it to prevent problems with orlean's custom task scheduler. In fsharp Mailbox this problem doesn't exist because we are in a loop and only way to break it to   
+As you can see that you have to use "task" computation builder instead of "async", we have to use it to prevent problems with orlean's custom task scheduler.    
 You can find more documentation [here](http://dotnet.github.io/orleans/). Orleankka introduction is [here](https://medium.com/@AntyaDev/introduction-to-orleankka-5962d83c5a27)
-[Translating async-await C# code to F# with respect to the scheduler](http://stackoverflow.com/questions/24813359/translating-async-await-c-sharp-code-to-f-with-respect-to-the-scheduler)
+4. [Akka.net](http://getakka.net/)
+This is a port of well known Akka fromework. So a lot of documentation and usages in production. Current version of Akka.net is suitable for production use. This implementation is not so abstract as Orleans and gives us less guaranties and more control. Intergation with fsharp implemented as "actor" computation expression. Lets check hello world in akka.net.
+{% highlight fsharp %}
+let aref =
+    spawn system "my-actor"
+        (fun mailbox ->
+            let rec loop() = actor {
+                let! message = mailbox.Receive()
+                printfn "%A" message
+                return! loop()
+            }
+            loop())
+{% endhighlight %}
+I Like this code a lot. It uses the same pattern as Fsharp's Mailbox Proccessor so it is trivial to move your code to akka.net and use akka's benefits. Why "actor" computation expression? Because it allows you to do a remote deployment and do stuff like hot code swap. Internally it uses F# quotations. More details about remote deployments you can find in [Akka.NET Remote Deployment With F#](http://bartoszsypytkowski.com/blog/2014/12/14/fsharp-akka-remote-deploy/). Yes this way to do remote deployment is limited, but they are working on a more interesting Mbrace like deployments [Akka.FSharp.HotLoad](https://github.com/akkadotnet/akka.net/issues/542)
+
+There are some comparisons of akka,erlang vs orleans. It is worth reading.
 [A look at Microsoft Orleans through Erlang-tinted glasses](http://theburningmonk.com/2014/12/a-look-at-microsoft-orleans-through-erlang-tinted-glasses/)
 [Orleans and Akka Actors: A Comparison(Roland Kuhn)](https://github.com/akka/akka-meta/blob/master/ComparisonWithOrleans.md)
-3. Akka.net
-This is a port of well known Akka fromework. So a lot of documentation and uses in production. Current version of Akka.net is suitable for production use. This implementation is not so abstract as Orleans and gives us less guaranties and more control. Intergation with fsharp implemented as "actor" computation expression. Lets check hello world in akka.net.
-[Akka.FSharp.HotLoad](https://github.com/akkadotnet/akka.net/issues/542)
-[Akka.NET Remote Deployment With F#](http://bartoszsypytkowski.com/blog/2014/12/14/fsharp-akka-remote-deploy/)
-{% highlight fsharp %}
-{% endhighlight %}
-#No Silver Bullet
+[Orleans, Distributed Virtual Actors for Programming and Scalability Comparison](http://christophermeiklejohn.com/papers/2015/05/03/orleans.html)
 
+5. [Thespian](http://nessos.github.io/Thespian/)
+This is an internal project of Nessos company, it is a part of [MBrace](http://www.m-brace.net/) stack. MBrace is a king of distributed computations and it is a huge win for fsharp community to have it. There are some other extremely useful tools from Nessos [FsPickler](http://nessos.github.io/FsPickler/), [Vagabond](http://nessos.github.io/Vagabond/),[Streams](https://github.com/nessos/Streams)...
+
+There is a quote from github about current project's state.
+> We created this library a couple of years ago to power mbrace,
+> when actor frameworks weren't that widely available. We released 
+> this now as part of our effort to open source the entire mbrace
+> stack. So I would say that it is stable but offering it for
+> standalone use is not one of our priorities for the moment 
+> (lacking documentation etc.)
+
+{% highlight fsharp %}
+open Nessos.Thespian
+
+type Msg = Msg of IReplyChannel<int> * int
+
+let behavior state (Msg (rc,v)) = async {
+    printfn "Received %d" v
+    rc.Reply <| Value state
+    return (state + v)
+}
+
+let actor =
+    behavior
+    |> Behavior.stateful 0 
+    |> Actor.bind
+    |> Actor.start
+
+let post v = actor.Ref <!= fun ch -> Msg(ch, v)
+
+post 42
+{% endhighlight %}
+5. [Cricket](http://fsprojects.github.io/Cricket/)
+> Cricket, formerly FSharp.Actor, is yet another actor framework. 
+> Built entirely in F#, Cricket is a lightweight alternative to Akka 
+> et. al. To this end it is not as feature rich as these out of 
+> the box, but all of the core requirements like location transpancy,
+> remoting, supervisors, metrics and tracing. Other things 
+> like failure detection and clustering are in the pipeline 
+> it is just a question of time.
+quote form [Introducing Cricket (formerly FSharp.Actor)](http://www.colinbull.net/2014/11/06/Introducing-Cricket/)
+{% highlight fsharp %}
+let greeter = 
+    actor {
+        name "greeter"
+        body (
+            let rec loop() = messageHandler {
+                let! msg = Message.receive() //Wait for a message
+
+                match msg with
+                | Hello ->  printfn "Hello" //Handle Hello leg
+                | HelloWorld -> printfn "Hello World" //Handle HelloWorld leg
+                | Name name -> printfn "Hello, %s" name //Handle Name leg
+
+                return! loop() //Recursively loop
+
+            }
+            loop())
+    } |> Actor.spawn
+{% endhighlight %}
+5. [Ractor.CLR](https://github.com/buybackoff/Ractor.CLR)
+It is not an actor framework, but very close to actors, it uses process-oriented programming paradigm. In short it is very close to orlean's Virtual Actors. in Ractor actors are virtual and exist in Redis per se as lists of messages, while a number of ephemeral workers (actors' "incarnations") take messages from Redis, process them and post results back.
+{% highlight fsharp %}
+#r "Ractor.dll"
+#r "Ractor.Persistence.dll"
+
+open System
+open System.Text
+open Ractor
+
+let fredis = new Ractor("localhost")
+
+let computation (input:string) : Async<unit> =
+    async {
+        Console.WriteLine("Hello, " + input)
+    }
+
+let greeter = fredis.CreateActor("greeter", computation)
+// type annotations are required
+let sameGreeter  = Ractor.GetActor<string, unit>("greeter")
+greeter.Post("Greeter 1")
+greeter.Post("Greeter 2")
+greeter.Post("Greeter 3")
+greeter.Post("Greeter 4")
+greeter.Post("Greeter 5")
+
+sameGreeter.Post("Greeter via instance from Ractor.GetActor")
+
+// this will fail if computation returns not Async<unit>
+"greeter" <-- "Greeter via operator"
+
+()
+{% endhighlight %}
+
+#What to choose
+Extremely hard question, but I hope now it is more clear for you how to choose one or another. I prefere to use mailbox proccessors(MB) and akka.net. You can start from fsx with MB and after that, move your code into a project (using [ProjectScaffold](https://github.com/fsprojects/ProjectScaffold)) and add remoting capabilites by converting(it is simple) your MB actors into akka.net actors.
+#No Silver Bullet
+Actors and csp are great tools to simplify concurrent programming. They uses queues which solves 
 
 {% highlight fsharp %}
 {% endhighlight %}
