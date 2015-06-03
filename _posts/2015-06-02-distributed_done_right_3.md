@@ -37,7 +37,7 @@ Also "agent" is used (as name) in  ConcurrentConstraintProgramming and ReactiveD
 #Implementations
 There are several actor implementations for fsharp.
 
-1. ##MailboxProcessor 
+1. #[MailboxProcessor]() 
 Well documented and widely used.
 Let’s write a simple Logging actor. 
 {% highlight fsharp %}
@@ -55,7 +55,7 @@ type Logger() =
     member x.Log msg = logger.Post(msg)
 {% endhighlight %}
 
-This simple actor are wrapped into a class and can be used as a regular object. More info in [blog posts](http://blogs.msdn.com/b/dsyme/archive/2010/02/15/async-and-parallel-design-patterns-in-f-part-3-agents.aspx) form  Don Syme's WebLog.
+This simple actor are wrapped into a class and can be used as a regular object. More info in [blog posts form Don Syme's WebLog](http://blogs.msdn.com/b/dsyme/archive/2010/02/15/async-and-parallel-design-patterns-in-f-part-3-agents.aspx) and [Messages and Agents(F# for fun and profit)](http://fsharpforfunandprofit.com/posts/concurrency-actor-model/)
 Mailbox processor has no built in ability to be distributed.
 
 2. #[FSharp.CloudAgent](http://isaacabraham.github.io/FSharp.CloudAgent/) 
@@ -81,13 +81,6 @@ let createASimpleAgent agentId =
                 let! message = inbox.Receive()
                 printfn "%s is %d years old." message.Name message.Age
         })
-
-// Create a worker cloud connection to the Service Bus Queue "myMessageQueue"
-let cloudConnection = WorkerCloudConnection(serviceBusConnection, Queue "myMessageQueue")
-
-// Start listening! A local pool of agents will be created that will receive messages.
-// Service bus messages will be automatically deserialised into the required message type.
-ConnectionFactory.StartListening(cloudConnection, createASimpleAgent >> BasicCloudAgent)
 {% endhighlight %}
 
 3. #[Orleans](https://github.com/dotnet/orleans).
