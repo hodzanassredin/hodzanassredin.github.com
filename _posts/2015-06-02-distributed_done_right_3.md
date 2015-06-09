@@ -324,3 +324,82 @@ Comments and critics are welcome.
 #Recommended reading:
 1. [An Introduction and Developer’s Guide to Cloud Computing with MBrace](http://www.m-brace.net/mbrace-manual.pdf)
 2. [Design patterns/best practice for building Actor-based system](http://stackoverflow.com/questions/3931994/design-patterns-best-practice-for-building-actor-based-system)
+
+#Update
+Example: how to attach MailboxProcessor to Udp port
+{% highlight fsharp %}
+open System.Net
+open System
+
+type System.Net.Sockets.UdpClient with
+      member x.AsyncSend (bytes: byte[]) =
+            Async.FromBeginEnd((fun (ar, s) -> x.BeginSend(bytes, bytes.Length, ar, s)), x.EndSend)
+      member x.AsyncReceive (endPoint: IPEndPoint ref) =
+            Async.FromBeginEnd(x.BeginReceive, fun ar -> x.EndReceive(ar, endPoint)) 
+
+module Udp =
+    open System.Net.Sockets
+    open System.Net
+    open Nessos.FsPickler
+    open System.IO
+
+    let binary = FsPickler.CreateBinary()
+
+    type Mailbox<'msg>(port: int) =
+        let event = new Event<'msg>()
+        let udp = new UdpClient(port)
+            
+        member x.Listen() = 
+            let ip = new IPEndPoint(IPAddress.Any, 15000);
+            let rec loop () = async{
+                let! bytes = udp.AsyncReceive(ref ip);
+                let stream = new MemoryStream(bytes)
+                let msg : 'msg = binary.Deserialize(stream)
+                event.Trigger(msg)
+                return! loop ()
+            }
+            loop() |> Async.Start
+            event.Publish
+
+        member x.Send msg = async{
+           let client = new UdpClient()
+           client.EnableBroadcast <- true
+           let ip =  new IPEndPoint(IPAddress.Broadcast, port)
+           client.Connect ip
+           let stream = new MemoryStream()
+           binary.Serialize(stream,msg)
+           let bytes = stream.ToArray()
+           let! _ = client.AsyncSend (bytes) 
+           return ()
+           }
+
+module Actor = 
+    type Message(id, contents) =
+        static let mutable count = -1
+        member this.ID = id
+        member this.Contents = contents
+        static member CreateMessage(contents) =
+            count <- count + 1
+            Message(count, contents)
+    let create() = new MailboxProcessor<Message>(fun inbox ->
+        let rec loop count =
+            async { printfn "Message count = %d. Waiting for next message." count
+                    let! msg = inbox.Receive()
+                    printfn "Message received. ID: %d Contents: %s"  msg.ID msg.Contents
+                    return! loop( count + 1) }
+        loop -1)
+
+[<EntryPoint>]
+let main argv = 
+    let mb = Udp.Mailbox<Actor.Message>(11000)
+    let ev = mb.Listen()
+    let actor = Actor.create()
+    actor.Start()
+    ev.Add(actor.Post)
+    async{
+    for i in 0..10 do
+        do! mb.Send(Actor.Message.CreateMessage(sprintf "%d" i))
+    } |> Async.RunSynchronously
+    Console.ReadKey() |> ignore
+    0 // return an integer exit code
+{% endhighlight %}
