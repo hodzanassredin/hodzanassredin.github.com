@@ -27,63 +27,84 @@ All of them are too far away from Django and Rails. I recommend not to fight wit
 #Chapters summary
 
 ## Chapter 1
--Boring: Installation. What is FP. Why Haskell?
+- Boring: Installation. What is FP. Why Haskell?
+
 ## Chapter 2
--Boring: Basic types, pattern matching.
+- Boring: Basic types, pattern matching.
+
 ## Chapter 3
--Boring: Lists, parametric polymorphism, partial application, currying, modules, folds.
--Interesting: Haskell origami, equational reasoning.
+- Boring: Lists, parametric polymorphism, partial application, currying, modules, folds.
+- Interesting: Haskell origami, equational reasoning.
+
 ## Chapter 4
--Boring: packaging, containers(map, set, trees), ad hoc polymorphism(type classes), binary trees.
--Interesting: graph, monoid, monoidal cache, functor, foldable
+- Boring: packaging, containers(map, set, trees), ad hoc polymorphism(type classes), binary trees.
+- Interesting: graph, monoid, monoidal cache, functor, foldable
+
 ## Chapter 5
--Interesting: lazy model of evaluation, thunk, profiling, strict fields.
+- Interesting: thunk, profiling, strict fields.
+- Hard: lazy model of evaluation
+
 ## Chapter 6
--Boring: monad, monad laws, monads(state, reader, writer)
--Interesting: k-means clustering, lenses, monads(RWS, ST)
+- Boring: monad, monad laws, monads(state, reader, writer)
+- Interesting: k-means clustering, lenses, monads(RWS, ST)
+
 This chapter is where hard stuff starts. It was also interesting to find that [Update computation expression](http://tomasp.net/blog/2014/update-monads/) also exists as RWS monad in Haskell.
+
 ## Chapter 7
--Boring: monads(list), monad transformers.
--Interesting: monads(MonadPlus, Logic), Association Rule Support(Apriori algorithm), liftm vs 'op', monadic classes.
+- Boring: monads(list), monad transformers.
+- Interesting: monads(MonadPlus, Logic), Association Rule Support(Apriori algorithm), liftm vs 'op', monadic classes.
+
 ## Chapter 8
--Interesting: monad(Par,STM), stm queues, cloud haskell.
+- Interesting: monad(Par,STM), stm queues, cloud haskell.
+
 Cloud Haskell is a super combo of mbrace with erlang.
+
 ## Chapter 9
--Boring: IO
--Interesting: errors and exceptions MonadError, lazy IO(Conduit)
+- Boring: IO
+- Interesting: errors and exceptions MonadError, lazy IO(Conduit)
+
 ## Chapter 10
--Boring: text, parsers(autoparsec), JSON.
--Interesting:Applicative, Traversable
+- Boring: text, parsers(autoparsec), JSON.
+- Interesting:Applicative, Traversable
 
 I thought that python 2 strings is a mess. No. Haskell is a clear winner: 5 types for string representation !!!
+
 ## Chapter 11
--Boring: database(Persistent and Esqueletto).
+- Boring: database(Persistent and Esqueletto).
+
 It is always funny for dot net dev(linq, type providers) to read about how cool is XXX strongly typed lib for db access.
 This part is a good example of how Haskell sucks when comparing with more modern c# and f#. All that dirty template workarounds.
+
 ## Chapter 12
--Boring: web(scotty, fay)
+- Boring: web(scotty, fay)
+
 ## Chapter 13
--Boring: embedded dsls(shallow, deep).
--Interesting and fucking hard: depended types(Idris), type families, Functional Dependencies, type promotion(singletons).
--Hard:GADT
+- Boring: embedded dsls(shallow, deep).
+- Interesting and fucking hard: depended types(Idris), type families, Functional Dependencies, type promotion(singletons).
+- Hard:GADT
+
 I know GADT and phantom types, but description in that part really sucks. Really hard to understand what is going on.
+
 ## Chapter 14
--Interesting: attribute grammars(UUAGC) and how it relates with monads(Reader,Writer) and monoids, origami programming(cata, ana, d-algebra, recursion-schemes)
+- Interesting: attribute grammars(UUAGC) and how it relates with monads(Reader,Writer) and monoids, origami programming(cata, ana, d-algebra, recursion-schemes)
+
 ## Chapter 15
--Boring: documentation, testing(HUnit, SmallCheck, QuickCheck).
--Interesting: formal verification(idris)
+- Boring: documentation, testing(HUnit, SmallCheck, QuickCheck).
+- Interesting: formal verification(idris)
+
 ## Chapter 16
--Interesting: patterns, relation with oop, free monad(just an example without description).
+- Interesting: patterns, relation with oop, free monad(just an example without description).
+
 ## Appendix 1
 Links, summary.
+
 ## Appendix 2
-Spoiler do not look if you are going to read the book ;-)
->! -Interesting: TARDIS monad
+[Spoiler do not click if you are going to read the book ;-)](https://github.com/DanBurton/tardis)]
 
 #P.S.
 I still doesn't know Haskell well and have just a small understanding of monads, but now I can read Haskell code.
 Will I use Haskell? Definitely no. I've already have golang for speed, python for ready to use libs, ml and web programming, fsharp for business logic and web/mobile UI. So I don't see a place for Haskell in my life. But now I have ability to bring some patterns from Haskell to my Fhsarp code and also know some interesting stuff to learn like attribute grammars. What's next? I've almost finished to learn existing mainstream languages. This year I'm going to refresh my knowledge of clojure/racket and will try to use them intensively. Because SICP is still the best. I will write a blog post about that next January. Will be interesting to finally compare clojure and fsharp. Who is number one?
 
 #Further reading
-[Origami programming](http://www.cs.ox.ac.uk/people/jeremy.gibbons/publications/origami.pdf)
-[Functional Programming with Bananas, Lenses, Envelopes and Barbed Wire](http://eprints.eemcs.utwente.nl/7281/01/db-utwente-40501F46.pdf)
+- [Origami programming](http://www.cs.ox.ac.uk/people/jeremy.gibbons/publications/origami.pdf)
+- [Functional Programming with Bananas, Lenses, Envelopes and Barbed Wire](http://eprints.eemcs.utwente.nl/7281/01/db-utwente-40501F46.pdf)
