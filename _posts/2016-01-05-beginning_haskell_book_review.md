@@ -1,7 +1,7 @@
 ---
 published: true
 layout: post
-title: Book review: Beginning Haskell A Project-Based Approach.
+title: Book review Beginning Haskell A Project-Based Approach.
 tags : [Haskell, book review]
 ---
 
