@@ -113,7 +113,7 @@ let createReader (path:string) =
                                    r.Dispose())
 {% endhighlight %}
 
-Now lets think how could we compose functions which uses that type. We have constructors () -> Dispose<'r'>, destructors Dispose<'r'> -> (), pure funcs 'a -> 'b and consumer funcs Dispose<'r'> -> 'res. Seems that we have to find some general representation for that funcs, but how to find it. Hm seems that funcs really similar to funcs in reader,writer and state monads. So actually we can use something like that and create common representation and computation builder for that. If you want to refresh memories about these monads then you need to read [Stateful computations in F# with update monads](http://tomasp.net/blog/2014/update-monads/) 
+Now lets think how could we compose functions which use that type. We have constructors () -> Dispose<'r'>, destructors Dispose<'r'> -> (), pure funcs 'a -> 'b and consumer funcs Dispose<'r'> -> 'res. Seems that we have to find some general representation for that funcs, but how to find it. Hm seems that funcs really similar to funcs in reader,writer and state monads. So actually we can use something like that and create common representation and computation builder for that. If you want to refresh memories about these monads then you need to read [Stateful computations in F# with update monads](http://tomasp.net/blog/2014/update-monads/) 
 
 {% highlight fsharp %}
 type Managed<'r> = Resource -> 'r * Resource
