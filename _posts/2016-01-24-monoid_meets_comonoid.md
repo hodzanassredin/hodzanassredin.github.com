@@ -97,7 +97,7 @@ let pair (Dispose(d)) =
     Dispose(destructor),Dispose(destructor)    
 {% endhighlight %}
 
-Now when we created some object we will return dispose func with it. 
+Now when we create some object we will return dispose func with it. 
 
 {% highlight fsharp %}
 let createWriter (path:string) =
