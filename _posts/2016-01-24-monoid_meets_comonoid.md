@@ -63,8 +63,12 @@ let createlogFileDestructor path =
     fun (s:string) -> use wr = new StreamWriter(path, true)
                       wr.WriteLine(s)
 
-let logFileStringDestructor = createlogFileDestructor <| Path.GetTempFileName()
-let composedDestructor = destructor >>> destructor2 >>> logFileStringDestructor >>> (toDestructor printSmth)
+let logFileStringDestructor = createlogFileDestructor 
+									<| Path.GetTempFileName()
+let composedDestructor = destructor 
+							>>> destructor2
+							>>> logFileStringDestructor 
+							>>> (toDestructor printSmth)
 
 let res = comboCtor()
 printfn "result of combo constructor %s" res
@@ -112,29 +116,32 @@ let createReader (path:string) =
 Now lets think how could we compose functions which uses that type. We have constructors () -> Dispose<'r'>, destructors Dispose<'r'> -> (), pure funcs 'a -> 'b and consumer funcs Dispose<'r'> -> 'res. Seems that we have to find some general representation for that funcs, but how to find it. Hm seems that funcs really similar to funcs in reader,writer and state monads. So actually we can use something like that and create common representation and computation builder for that. If you want to refresh memories about these monads then you need to read [Stateful computations in F# with update monads](http://tomasp.net/blog/2014/update-monads/) 
 
 {% highlight fsharp %}
- type Managed<'r> = Resource -> 'r * Resource
- type ResourceBuilder() = 
-          member inline x.Return(v) : Managed<'r> = fun r -> destroy r
-                                                                                            v, mzero
-          member inline x.ReturnFrom(v) : Managed<'T> = v
+type Managed<'r> = Resource -> 'r * Resource
+type ResourceBuilder() = 
+      member inline x.Return(v) : Managed<'r> = fun r -> destroy r
+                                                         v, mzero
+      member inline x.ReturnFrom(v) : Managed<'T> = v
 
-          member inline x.Bind(rm1:Managed<'T>, f:'T -> Managed<'T2>) : Managed<'T2> =  
-                fun r -> let r,r2 = pair r
-                         let v, r = rm1 r
-                         f v (mappend r r2)
+      member inline x.Bind(rm1:Managed<'T>, f:'T -> Managed<'T2>) : Managed<'T2> =  
+            fun r -> let r,r2 = pair r
+                     let v, r = rm1 r
+                     f v (mappend r r2)
 
 
 let resource = ResourceBuilder()
 et destroySnd t = destroy <| snd t
-                       fst t
+                  fst t
 
 let run (tr:Managed<'r>) = mzero |> tr |> destroySnd
 {% endhighlight %}
 The idea is quite simple, we just need to follow several rules.
+
 1. dispose resource object before exit.
 2. merge result of function invocation resource object with current resource object
 3. before passing resource as an argument create its clone
+
 Now we could move previously described constructors into our builder and use or new builder.
+
 {% highlight fsharp %}
 let liftCtor c a: Managed<_>  = fun r -> destroy r
                                          c a
@@ -182,7 +189,8 @@ let program = resource{
     let! r = subProgram2()
     printfn "finished executing sub program2"
     printfn "executing async write line"
-    let! a = startAsync (asyncWriteLine "async line" w)//captured both reader and writer
+    //captures both reader and writer
+    let! a = startAsync (asyncWriteLine "async line" w)
     printfn "finished executing async write line"
     printfn "reading line"
     let line = r.ReadLine()
@@ -199,6 +207,8 @@ Async.RunSynchronously <| Async.Sleep 2000
 if you execute it, you will see that resources are disposed in expected way and we didn't use "use" keyword. Now we are able to pass objects into async computations and run them in parallel. 
 
 That it. Hope you found something interesting for you. 
+
+Code is [here](https://gist.github.com/hodzanassredin/1bc1521bb49b215413e2)
 
 #Recommended reading:
 1. [What does a nontrivial comonoid look like?](http://stackoverflow.com/questions/23855070/what-does-a-nontrivial-comonoid-look-like)
