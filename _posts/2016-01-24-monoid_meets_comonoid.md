@@ -1,7 +1,7 @@
 ---
 published: true
 layout: post
-title: (Co)Monids for composable resource management in fsharp
+title: (Co)Monoids for composable resource management in fsharp
 tags : [fsharp, monoid, comonoid]
 ---
 
@@ -140,7 +140,7 @@ The idea is quite simple, we just need to follow several rules.
 2. merge result of function invocation resource object with current resource object
 3. before passing resource as an argument create its clone
 
-Now we could move previously described constructors into our builder and use or new builder.
+Now we could move previously described constructors into our builder and use our new builder.
 
 {% highlight fsharp %}
 let liftCtor c a: Managed<_>  = fun r -> destroy r
