@@ -163,7 +163,6 @@ type Greeter() =
       | Hi -> printfn "Hello from F#!"           
    }
 
-[<EntryPoint>]
 let main argv = 
 
     printfn "Running demo. Booting cluster might take some time ...\n"
