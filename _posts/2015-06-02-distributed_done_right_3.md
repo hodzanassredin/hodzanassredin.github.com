@@ -155,7 +155,7 @@ type Message =
    | Hi
 
 type Greeter() = 
-   inherit Actor < Message > ()   
+   inherit Actor<Message>()   
 
    override this.Receive message reply = task {
       match message with
@@ -163,25 +163,22 @@ type Greeter() =
       | Hi -> printfn "Hello from F#!"           
    }
 
-let main argv =
-    printfn "Running demo. Booting cluster might take some time ..."
+[<EntryPoint>]
+let main argv = 
+    printfn "Running demo. Booting cluster might take some time ...\n"
     use system = ActorSystem.Configure()
                             .Playground()
                             .Register(Assembly.GetExecutingAssembly())
                             .Done()
-                  
     let actor = system.ActorOf<Greeter>(Guid.NewGuid().ToString())
-
     let job() = task {
-      do! actor (Hi)
-      do! actor (Greet "Yevhen")
-      do! actor (Greet "AntyaDev")
+      do! actor <! Hi
+      do! actor <! Greet "Yevhen"
+      do! actor <! Greet "AntyaDev"
     }
-    
-    Task.run(job) 
-    
-    Console.ReadLine()  
-
+    Task.run(job) |> ignore
+    Console.ReadLine() |> ignore    
+    0
 {% endhighlight %}
 As you can see, there is a "task" computation builder instead of "async", we have to use it to prevent problems with Orleans’s custom task scheduler (deadlocking).    
 You can find more documentation [here](http://dotnet.github.io/orleans/). Orleankka introduction is [here](https://medium.com/@AntyaDev/introduction-to-orleankka-5962d83c5a27)
