@@ -181,9 +181,9 @@ let main argv =
       do! actor <! Greet "AntyaDev"
     }
     
-    Task.run(job) |> ignore
+    Task.run(job) 
     
-    Console.ReadLine() |> ignore    
+    Console.ReadLine()  
     0
 {% endhighlight %}
 As you can see, there is a "task" computation builder instead of "async", we have to use it to prevent problems with Orleans’s custom task scheduler (deadlocking).    
