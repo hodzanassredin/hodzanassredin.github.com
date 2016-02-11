@@ -155,7 +155,7 @@ type Message =
    | Hi
 
 type Greeter() = 
-   inherit Actor<Message>()   
+   inherit Actor < Message > ()   
 
    override this.Receive message reply = task {
       match message with
