@@ -163,10 +163,8 @@ type Greeter() =
       | Hi -> printfn "Hello from F#!"           
    }
 
-let main argv = 
-
-    printfn "Running demo. Booting cluster might take some time ...\n"
-
+let main argv =
+    printfn "Running demo. Booting cluster might take some time ..."
     use system = ActorSystem.Configure()
                             .Playground()
                             .Register(Assembly.GetExecutingAssembly())
