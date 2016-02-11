@@ -69,35 +69,23 @@ In addition, we hide queues behind a REST api facade implemented as azure web si
 public class QueueStorageMulti<T> : IQueueWrapper<T>, ISyncQueue 
     where T : BaseMessage
 {
-    ...
     string prefix;
-    ...
-
     public void Close()
     {
         foreach (var q in _queues.Values)
-        {
 	        q.Close();
-        }
     }
-
     public void OnMessage(Func<T, Task> act)
     {
         _act = act;
         foreach (var q in _queues.Values)
-        {
             q.OnMessage(_act);
-        }
     }
-
     public async Task Publish(T message)
     {
         foreach (var item in _queues)
-        {
 	        await item.Publish(message);
-        }
     }
-
     public async Task Init(string connectionString, 
                            string queuePrefix, 
                            TimeSpan publishTimeToLive, 
@@ -106,7 +94,6 @@ public class QueueStorageMulti<T> : IQueueWrapper<T>, ISyncQueue
         ...
         await Refresh();
     }
-
     public async Task<int?> Length()
     {
         var res = 0;
@@ -128,7 +115,6 @@ public class QueueStorageMulti<T> : IQueueWrapper<T>, ISyncQueue
         await Refresh();
         return false;
     }
-
     public async Task Refresh()
     {
         //refresh queus by prefix
@@ -154,7 +140,6 @@ public abstract class BaseMessage {
     public string ReauestId { get; set; }
     public abstract string GetKey();
     public List<Address> ResponseRecievers { get; set; }
-
     public String Error { get; set; }
     public String StackTrace { get; set; }
 }
@@ -173,7 +158,6 @@ New problem: different types of queues have different maximum limit of message s
         BlobReference = Guid.Empty;
         Value = obj;
     }
-
     public async Task ToRef(BlobStorage storage)
     {
         if (BlobReference != Guid.Empty) return;
@@ -182,20 +166,17 @@ New problem: different types of queues have different maximum limit of message s
         await storage.SaveBlob(str, BlobReference.ToString("N"));
         Value = null;
     }
-
     public async Task FromRef(BlobStorage storage)
     {
         if (BlobReference == Guid.Empty) return;
         var str = await storage.LoadText(BlobReference.ToString("N"));
         Value = JsonConvert.DeserializeObject(str, Settings.json);
     }
-
     public async Task DeleteRef(BlobStorage storage)
     {
         if (BlobReference == Guid.Empty) return;
         await storage.DeleteBlob(BlobReference.ToString("N"));
     }
-
     public Guid BlobReference { get; set; }
     public Object Value { get; set; }
 }
@@ -208,33 +189,26 @@ Worker, on start, loading all files and other shared resources and after that ch
 public abstract class TasksRoleEntryPoint : RoleEntryPoint
 {
     private readonly List<Task> _tasks = new List<Task>();
-
     private readonly CancellationTokenSource _tokenSource;
-
     private WorkerEntryPoint[] _workers;
-
     public TasksRoleEntryPoint()
     {
         _tokenSource = new CancellationTokenSource();
     }
-
     public void Run(WorkerEntryPoint[] arrayWorkers)
     {
         try
         {
             _workers = arrayWorkers;
-
             foreach (WorkerEntryPoint worker in _workers)
             {
                 worker.OnStart(_tokenSource.Token).Wait();
             }
-
             foreach (WorkerEntryPoint worker in _workers)
             {
                 var task = worker.ProtectedRun();
                 _tasks.Add(task);
             }
-
             int completedTaskIndex;
             while ((completedTaskIndex = Task.WaitAny(_tasks
                     .ToArray())) != -1 && _tasks.Count > 0)
@@ -255,12 +229,10 @@ public abstract class TasksRoleEntryPoint : RoleEntryPoint
         }
         Trace.TraceError("Run workers exit");
     }
-
     public override bool OnStart()
     {
         return base.OnStart();
     }
-
     public override void OnStop()
     {
         Trace.TraceError("OnStop called");

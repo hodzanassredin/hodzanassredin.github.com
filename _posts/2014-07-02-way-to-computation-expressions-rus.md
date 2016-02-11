@@ -23,7 +23,6 @@ public static class TuringMonad
 		return m.Bind (a => a ? x () 
 							  : y ()).CastM<T,TR, TM> ();
 	}
-
 	public static TR WhileM<T,TM, TR> (this TR m, 
 									   Func<T, IMonad<bool,TM>> p,
 									   Func<T, TR> step)
@@ -37,7 +36,6 @@ public static class TuringMonad
 		);
 		return res.CastM<T,TR, TM> ();
 	}
-
 	public static TR AndM<TM, TR> (this TR x, TR y)
 		where TR:TM, IMonad<bool,TM>
 	{
@@ -47,7 +45,6 @@ public static class TuringMonad
 									   .CastM<bool,TR, TM> ()
 				);
 	}
-
 	public static TR OrM<TM, TR> (this TR x, TR y)
 		where TR:TM, IMonad<bool,TM>
 	{
@@ -56,7 +53,6 @@ public static class TuringMonad
 			() => y
 		);
 	}
-
 	public static TR NotM<TM, TR> (this TR m)
 		where TR:TM, IMonad<bool,TM>
 	{
@@ -73,11 +69,8 @@ public class Unit
 {
 	Unit ()
 	{
-		
 	}
-
 	public static Unit Value = new Unit ();
-
 	public static Unit Start ()
 	{
 		return Value;
@@ -86,19 +79,16 @@ public class Unit
 //...
 public class MainClass{
 	//... 
-
 	//helper methods
 	static CheckForT<Async>.CheckT<T> Return<T> (T val)
 	{
 		Func<T,Task<T>> f = t => Task<T>.FromResult (t);
 		return Lift (() => f (val)) ();
 	}
-
 	static T Head<T> (List<T> lst)
 	{
 		return lst [0]; 
 	}
-
 	static List<T> Tail<T> (List<T> lst)
 	{
 		lst.RemoveAt (0);
@@ -129,7 +119,6 @@ public class MainClass{
 								 CheckForT<Async>.CheckT<List<String>>,
 								 CheckForT<Async>> ();
 			};
-
 		Func<CheckForT<Async>.CheckT<List<string>>, 
 			IMonad<Unit, CheckForT<Async>>> whileLoop = 
 				addrsM => 
@@ -142,7 +131,6 @@ public class MainClass{
 				              	checkHeadAndReturnTail
 				    )
 			        select Unit.Value;
-
 		var res2 = 
 			from addrs in Return (
 				new List<string>{ "http://google.com", "http://yandex.ru" })
@@ -158,7 +146,6 @@ public class MainClass{
 				    			   CheckForT<Async>> (), 
 				    () => Return (Unit.Value))
 			select r;
-			
 		var result = 
 			res2
 			.CastM<Unit, CheckForT<Async>.CheckT<Unit>,CheckForT<Async>> ()
@@ -231,12 +218,9 @@ type MaybeBuilder() =
         match x with
         | None -> None
         | Some a -> f a
-
     member this.Return(x) = 
         Some x
-
 let maybe = new MaybeBuilder()
-
 let divideBy bottom top =
     if bottom = 0
     then None
@@ -279,14 +263,12 @@ type SeqBuilder() =
       seq { for v in source do yield! body v }
     member x.Yield item =
       seq { yield item }
-
     // Define an operation 'select' that performs projection
     [<CustomOperation("select")>]
     member x.Select (source : seq<'T>, 
     				 [<ProjectionParameter>] f: 'T -> 'R) 
     				 : seq<'R> =
         Seq.map f source
-
     // Defines an operation 'reverse' that reverses the sequence    
     [<CustomOperation("reverse", MaintainsVariableSpace = true)>]
     member x.Expand (source : seq<'T>) =

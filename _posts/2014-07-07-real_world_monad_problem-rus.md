@@ -50,18 +50,15 @@ Action это базовый класс для всех активностей. 
 public class Storage
 {
 	static JsonSerializerSettings settings;
-
 	static Storage ()
 	{
 		settings = new JsonSerializerSettings ();
 	}
-
 	public static void Save<T> (T wrkfl, String name)
 	{
 		var json = JsonConvert.SerializeObject (wrkfl, settings);
 		File.WriteAllText (name, json);
 	}
-
 	public static T Load<T> (string name)
 		where T:new()
 	{
@@ -88,9 +85,7 @@ public class Unit//no result object
 {
 	Unit ()
 	{
-
 	}
-
 	public static Unit Value = new Unit ();
 }
 public class WorkflowStep<T>
@@ -99,22 +94,18 @@ public class WorkflowStep<T>
 	{
 		...
 	}
-
 	public WorkflowStep (T value)
 	{
 		...
 	}
-
 	public Action Action {
 		get;
 		private set;
 	}
-
 	public bool IsExecuted ()
 	{
 		...
 	}
-
 	public T GetValue ()
 	{
 		...
@@ -127,24 +118,20 @@ public abstract class Workflow<TB>
 		var step = new WorkflowStep<T> (act);
 		return step;
 	}
-
 	protected WorkflowStep<T> Ask<T> (String what)
 	{
 		return Do<T> (new Ask<T> (){ What = what });
 	}
-
 	protected WorkflowStep<Unit> Show (String what)
 	{
 		return Do<Unit> (new Show (){ What = what });
 	}
-
 	public abstract WorkflowStep<TB> GetResult ();
 }
 public class SumWorkflow:Workflow<int>
 {
 	public SumWorkflow ()
 	{
-		
 	}
 	// не корректный код
 	public override WorkflowStep<int> GetResult ()
@@ -235,7 +222,6 @@ public class WorkflowStep<T>
 		}
 		return new WorkflowStep<TB> (this.Action, this.Context, this.Index);
 	}
-
 	public static WorkflowStep<TB> Return<TB> (TB x)
 	{
 		return new WorkflowStep<TB> (x);
@@ -267,7 +253,6 @@ public static class WorkflowMonad
 	{
 		return new WorkflowStep<T> (value);
 	}
-
 	public static WorkflowStep<U> Bind<T, U> (
 		this WorkflowStep<T> m, 
 		Func<T, WorkflowStep<U>> k)
@@ -277,7 +262,6 @@ public static class WorkflowMonad
 		}
 		return new WorkflowStep<U> (m.Action);
 	}
-
 	public static WorkflowStep<V> SelectMany<T, U, V> (
 		this WorkflowStep<T> id,
 		Func<T, WorkflowStep<U>> k,
@@ -285,7 +269,6 @@ public static class WorkflowMonad
 	{
 		return id.Bind (x => k (x).Bind (y => s (x, y).Return ()));
 	}
-
 	public static WorkflowStep<B> Select<A, B> (
 		this WorkflowStep<A> a, 
 		Func<A, B> select)
@@ -313,22 +296,18 @@ public class ExecutionContext
 	{
 		Memory = new List<string> ();
 	}
-
 	public List<string> Memory {
 		get;
 		set;
 	}
-
 	public int Index {
 		get;
 		private set;
 	}
-
 	public void Restart ()
 	{
 		Index = 0;
 	}
-
 	public void Inc ()
 	{
 		Index = Index + 1;
@@ -341,7 +320,6 @@ public static class SerializationHelpers
 	{
 		return JsonConvert.DeserializeObject<T> (json);
 	}
-
 	public static string ValueToString<T> (this T value)
 	{
 		return JsonConvert.SerializeObject (value);
@@ -358,24 +336,19 @@ public class WorkflowStep<T>
 		Context = context;
 		Index = index;
 	}
-
 	public WorkflowStep (T value)
 	{
 		Context.Memory.Add (value.ValueToString ());
 	}
-
 	public ExecutionContext Context = new ExecutionContext ();
-
 	public bool IsExecuted ()
 	{
 		return (this.Index) < Context.Memory.Count;
 	}
-
 	public T GetValue ()
 	{
 		return Context.Memory [this.Index].ParseValue<T> ();
 	}
-
 	public int Index {
 		get;
 		set;
@@ -387,49 +360,40 @@ public abstract class Workflow<TB>
 	{
 		Context = new ExecutionContext ();
 	}
-
 	public Workflow (ExecutionContext ctx)
 	{
 		Context = ctx;
 		IsSubWorkflow = true;
 	}
-
 	public bool IsSubWorkflow {
 		get;
 		set;
 	}
-
 	public ExecutionContext Context {
 		get;
 		set;
 	}
-
 	protected WorkflowStep<T> Do<T> (Action act)
 	{
 		var step = new WorkflowStep<T> (act, Context, Context.Index);
 		Context.Inc ();
 		return step;
 	}
-
 	protected WorkflowStep<T> Ask<T> (String what)
 	{
 		return Do<T> (new Ask<T> (){ What = what });
 	}
-
 	protected WorkflowStep<Unit> Show (String what)
 	{
 		return Do<Unit> (new Show (){ What = what });
 	}
-
 	public abstract WorkflowStep<TB> GetResultInt ();
-
 	public WorkflowStep<TB> GetResult ()
 	{
 		if (!IsSubWorkflow)
 			Context.Restart ();
 		return GetResultInt ();
 	}
-
 	public void AddResult (object val)
 	{
 		Context.Memory.Add (val.ValueToString ());

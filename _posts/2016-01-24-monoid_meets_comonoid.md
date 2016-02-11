@@ -92,7 +92,6 @@ let pair (Dispose(d)) =
     let destructor () = 
         if !f then d()
         else f := true
-
     let destructor = synchronized destructor
     Dispose(destructor),Dispose(destructor)    
 {% endhighlight %}
@@ -121,12 +120,10 @@ type ResourceBuilder() =
       member inline x.Return(v) : Managed<'r> = fun r -> destroy r
                                                          v, mzero
       member inline x.ReturnFrom(v) : Managed<'T> = v
-
       member inline x.Bind(rm1:Managed<'T>, f:'T -> Managed<'T2>) : Managed<'T2> =  
             fun r -> let r,r2 = pair r
                      let v, r = rm1 r
                      f v (mappend r r2)
-
 
 let resource = ResourceBuilder()
 et destroySnd t = destroy <| snd t

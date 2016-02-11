@@ -105,7 +105,6 @@ public static void Compare (string[] args)
 	var res = Defend (GetData<Object> (), 
 		          (a) => Defend (GetData<Object> (), 
 			          (b) => a == b ? "a == b" : "a != b"));
-
 	Console.WriteLine (res);
 	Console.WriteLine ("finished!");
 }
@@ -118,12 +117,10 @@ class Test
 {
 	public Test ()
 	{
-
 	}
 	public string Text(){
 		return "test";
 	}
-
 }
 public static void Test(){
 	Defend2(new Test(), a=>a.Text());
@@ -147,27 +144,22 @@ public class Check<T> where T : class
 		IsFailed = true;
 		FailMesssage = errorMessage;
 	}
-
 	public Check (T val)
 	{
 		Value = val;
 	}
-
 	public bool IsFailed {
 		get;
 		private set;
 	}
-
 	public string FailMesssage {
 		get;
 		private set;
 	}
-
 	public T Value {
 		get;
 		private set;
 	}
-
 	public override string ToString ()
 	{
 		return string.Format (
@@ -177,7 +169,6 @@ public class Check<T> where T : class
 			 Value);
 	}
 }
-
 public static Check<TB> Defend<TA,TB> (TA a, Func<TA, TB> f)
 			where TA : class
 			where TB : class//applied only for TB and TA which can be null
@@ -195,41 +186,34 @@ public static void Compare (string[] args)
 	Check<Test> res = Defend (GetData<Test> (),
 		a => Defend (GetData<Test> (),
 			          b => a == b ? a : b));
-
 	Console.WriteLine (res);
 	Console.WriteLine ("finished!\n");
 }
 {% endhighlight %}
 Problem again, our code returns Check< Check< T > > instead of Check< T > and it is not very good. We will change our code to avoid this problem.
 {% highlight csharp %}
-public class Check<T>
-	where T : class
+public class Check<T> where T : class
 {
 	private Check (T val)
 	{
 		Value = val;
 	}
-
 	public static Check<T> Success (T val)
 	{
 		return new Check<T> (val){ IsFailed = false };
 	}
-
 	public static Check<T> Fail ()
 	{
 		return new Check<T> (null){ IsFailed = true };
 	}
-
 	public bool IsFailed {
 		get;
 		private set;
 	}
-
 	public T Value {
 		get;
 		private set;
 	}
-
 	public override string ToString ()
 	{
 		return string.Format (
@@ -238,14 +222,12 @@ public class Check<T>
 			Value);
 	}
 }
-
 public static Check<TB> Defend<TA,TB> (Check<TA> a, Func<TA, Check<TB>> f)
 	where TA : class//applied only for TA which can be null
 	where TB : class//applied only for TB which can be null
 {
 	return a.IsFailed ? Check<TB>.Fail () : f (a.Value);
 }
-
 public static Func<Check<T>> Lift<T> (Func<T> f)
 	where T : class
 {
@@ -276,27 +258,22 @@ public class Check<T>
 	{
 		Value = val;
 	}
-
 	public static Check<T> Success (T val)
 	{
 		return new Check<T> (val){ IsFailed = false };
 	}
-
 	public static Check<T> Fail ()
 	{
 		return new Check<T> (default(T)){ IsFailed = true };
 	}
-
 	public bool IsFailed {
 		get;
 		private set;
 	}
-
 	public T Value {
 		get;
 		private set;
 	}
-
 	public override string ToString ()
 	{
 		return string.Format (
@@ -305,12 +282,10 @@ public class Check<T>
 			Value);
 	}
 }
-
 public static Check<TB> Defend<TA,TB> (Check<TA> a, Func<TA, Check<TB>> f)
 {
 	return a.IsFailed ? Check<TB>.Fail () : f (a.Value);
 }
-
 public static Func<Check<T>> Lift<T> (Func<T> f)
 	where T : class
 {
@@ -319,19 +294,16 @@ public static Func<Check<T>> Lift<T> (Func<T> f)
 		return res == null ? Check<T>.Fail () : Check<T>.Success (res);
 	};
 }
-
 public static Check<T> Return <T> (T val)
 {
 	return Check<T>.Success (val);
 }
-
 public static void DefesiveCompare (string[] args)
 {
 	var getData = Lift<Test> (GetData<Test>);
 	Check<Test> res = Defend<Test,Test> (getData (), 
 		                   a => Defend<Test,Test> (getData (), 
 			                   b => Return (a == b ? a : b)));
-
 	Console.WriteLine (res);
 	Console.WriteLine ("finished!");
 }
@@ -344,27 +316,22 @@ public class Check<T>
 	{
 		Value = val;
 	}
-
 	public static Check<T> Success (T val)
 	{
 		return new Check<T> (val){ IsFailed = false };
 	}
-
 	public static Check<T> Fail ()
 	{
 		return new Check<T> (default(T)){ IsFailed = true };
 	}
-
 	public bool IsFailed {
 		get;
 		private set;
 	}
-
 	public T Value {
 		get;
 		private set;
 	}
-
 	public override string ToString ()
 	{
 		return string.Format (
@@ -380,12 +347,10 @@ public static class CheckMonad
 	{
 		return Check<T>.Success (value);
 	}
-
 	public static Check<U> Bind<T, U> (this Check<T> m, Func<T, Check<U>> k)
 	{
 		return m.IsFailed ? Check<U>.Fail () : k (m.Value);
 	}
-
 	public static Func<Check<T>> Lift<T> (Func<T> f)
 		where T : class
 	{
@@ -394,7 +359,6 @@ public static class CheckMonad
 			return res == null ? Check<T>.Fail () : Check<T>.Success (res);
 		};
 	}
-
 	public static Check<V> SelectMany<T, U, V> (
 		this Check<T> id,
 		Func<T, Check<U>> k,
@@ -408,7 +372,6 @@ class Test
 {
 	public Test ()
 	{
-
 	}
 }
 
@@ -418,13 +381,11 @@ class MainClass
 	{
 		return new Random ().Next () % 2 == 0 ? true : false;
 	}
-
 	public static T GetData<T> () 
 		where T : class, new()
 	{
 		return Bool () ? null : new T ();
 	}
-
 	static void Main (string[] args)
 	{
 		var getData = CheckMonad.Lift<Test> (GetData<Test>);
@@ -432,7 +393,6 @@ class MainClass
 			from a in getData ()
 			from b in getData ()
 			select a == b ? a : b;
-
 		Console.WriteLine (res);
 		Console.WriteLine ("finished!");
 	}
@@ -474,9 +434,7 @@ public abstract class Wrapper
 {
 	private Wrapper ()
 	{
-		
 	}
-
 	public sealed class WrapperImpl<T> : Wrapper
 	{
 	}
@@ -486,12 +444,10 @@ Interesting. First of all we can be sure that instance of type Wrapper is the in
 {% highlight csharp %}
 public interface IGeneric<T, TCONTAINER>
 {
-
 }
 public class Wrapper{
 	public sealed class WrapperImpl<T> : Wrapper, IGeneric<T, Wrapper>
 	{
-
 	}
 }
 {% endhighlight %}
@@ -522,7 +478,6 @@ Bingo. One restriction is to follow single inheritance pattern when describing o
 //	}
 public interface IGeneric<T, TCONTAINER>
 {
-
 }
 
 public static class GenericExts
@@ -552,35 +507,27 @@ public abstract class Wrapper
 {
 	private Wrapper ()
 	{
-		
 	}
-
 	public sealed class WrapperImpl<T> : 
 				Wrapper, 
 				IGeneric<T, Wrapper>, 
 				IFunctorSelf<Wrapper, WrapperImpl<T> , T>
 	{
 		#region IFunctorSelf implementation
-
 		public CB FMap<B, CB> (Func<T, B> f) where CB : IGeneric<B, Wrapper>
 		{
 			var res = new WrapperImpl<B> (f (Value));
 			return res.UpCast<B, CB,Wrapper> ();
 		}
-
 		#endregion
-
 		public WrapperImpl (T val)
 		{
 			Value = val;
 		}
-
 		public T Value {
 			get;
 			set;
 		}
-
-
 	}
 }
 class MainClass
@@ -608,7 +555,6 @@ public static class MonadSyntax
 	{
 		return (TM)m;//safe for single inheritance
 	}
-
 	public static IMonad<V, TMI> SelectMany<T, TMI, U, V> 
 	(
 		this IMonad<T, TMI> id,
@@ -625,50 +571,39 @@ public class Check
 {
 	Check ()
 	{
-
 	}
-
 	public sealed class CheckM<T>: Check, IMonad<T, Check>
 	{
 		#region IMonad implementation
-
 		public IMonad<TB, Check> Return<TB> (TB val)
 		{
 			return CheckM<TB>.Success (val);
 		}
-
 		public IMonad<TB, Check> Bind<TB> (Func<T, IMonad<TB, Check>> f)
 		{
 			return this.IsFailed ? CheckM<TB>.Fail () : f (this.Value);
 		}
-
 		#endregion
-
 		CheckM (T val)
 		{
 			Value = val;
 		}
-
 		public static CheckM<T> Success (T val)
 		{
 			return new CheckM<T> (val){ IsFailed = false };
 		}
-
 		public static CheckM<T> Fail ()
 		{
 			return new CheckM<T> (default(T)){ IsFailed = true };
 		}
-
 		public bool IsFailed {
 			get;
 			private set;
 		}
-
 		public T Value {
 			get;
 			private set;
 		}
-
 		public override string ToString ()
 		{
 			return string.Format (
@@ -696,13 +631,10 @@ public class Async
 {
 	Async ()
 	{
-
 	}
-
 	public sealed class AsyncM<T>: Async, IMonad<T, Async>
 	{
 		#region IMonad implementation
-
 		public IMonad<TB, Async> Return<TB> (TB val)
 		{
 			return new AsyncM<TB>(Task<TB>.FromResult(val));
@@ -715,16 +647,13 @@ public class Async
 			var r = await m;
 			return await f(r);//could be rewriten as return f(r);
 		}
-
 		public IMonad<TB, Async> Bind<TB> (Func<T, IMonad<TB, Async>> f)
 		{
 			return new AsyncM<TB>(BindTasks(this.Task, 
 				(t) => f(t).UpCast<TB, AsyncM<TB>, 
 				Async>().Task));
 		}
-
 		#endregion
-
 		public AsyncM (Task<T> val)
 		{
 			Task = val;
@@ -735,7 +664,6 @@ public class Async
 		}
 	}
 }
-
 public static class AsyncMonad
 {
 	public static Func<Async.AsyncM<TB>> Lift<TB> (this Func<Task<TB>> f)
@@ -758,7 +686,6 @@ class MainClass
 			new Uri("http://google.com")
 		);
 	}
-
 	static void Main (string[] args)
 	{
 		var getData = AsyncMonad.Lift (GetData);
@@ -779,13 +706,10 @@ public class CheckForT<TMI>
 {
 	CheckForT ()
 	{
-
 	}
-
 	public sealed class CheckT<T>: CheckForT<TMI>, IMonad<T, CheckForT<TMI>>
 	{
 		#region IMonad implementation
-
 		public IMonad<TB, CheckForT<TMI>> Return<TB> (TB val)
 		{
 			return new CheckT<TB> (
@@ -794,7 +718,6 @@ public class CheckForT<TMI>
 				)
 			);
 		}
-
 		private IMonad<CheckedVal<TB>,TMI> BindInternal<TB> (
 			CheckedVal<T> check, 
 			Func<T, IMonad<TB, CheckForT<TMI>>> f)
@@ -803,7 +726,6 @@ public class CheckForT<TMI>
 				? Value.Return<CheckedVal<TB>> (CheckedVal<TB>.Fail ()) 
 				: f (check.Value).UpCast<TB, CheckT<TB>,CheckForT<TMI>> ().Value;
 		}
-
 		public IMonad<TB, CheckForT<TMI>> Bind<TB> (
 			Func<T, IMonad<TB, CheckForT<TMI>>> f)
 		{
@@ -812,14 +734,11 @@ public class CheckForT<TMI>
 			);
 			return new CheckT<TB> (tmp);
 		}
-
 		#endregion
-
 		public CheckT (IMonad<CheckedVal<T>,TMI> val)
 		{
 			Value = val;
 		}
-
 		public IMonad<CheckedVal<T>,TMI> Value {
 			get;
 			private set;
@@ -837,7 +756,6 @@ public static class CheckMonad
 			return new Check.CheckM<TB> (CheckedVal<TB>.ToCheck (res));
 		};
 	}
-
 	public static Func<Check.CheckM<TB>> Lift<TB> (
 		this Func<CheckedVal<TB>> f)
 		where TB : class
@@ -847,7 +765,6 @@ public static class CheckMonad
 			return new Check.CheckM<TB> (res);
 		};
 	}
-
 	public static Func<CheckForT<TMI>.CheckT<TB>> LiftT<TB,TMI> (
 		this Func<IMonad<TB,TMI>> f)
 		where TB : class
@@ -856,7 +773,6 @@ public static class CheckMonad
 			var m = f ();
 			return m.Bind (val => m.Return (CheckedVal<TB>.ToCheck (val)));
 		};
-
 		return () => {
 			var monad = checkF ();
 			return new CheckForT<TMI>.CheckT<TB> (monad);
@@ -873,7 +789,6 @@ public static Task<String> GetData ()
 		new Uri ("http://google.com")
 	);
 }
-
 static void Main (string[] args)
 {
 	var getData = CheckMonad.LiftT (AsyncMonad.Lift (GetData));

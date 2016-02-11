@@ -122,7 +122,6 @@ let processImagesAsyncSlim limit =
                 Async.Start(processImageAsync(i)|> wrap)
             countdownEvent.Wait()
             }
-                            
     Async.RunSynchronously (tasks) |> ignore
 {% endhighlight %}
 Now we could respect concurrency level allowed by a data source and probably find a best level by starting it several times with different limits. Unfortunately we still have a problem. We have different types of concurrency in our pipeline which could request different levels of concurrency. For example in our case reading from disk could be done with 100 concurrent requests, image processing is cpu bound and usually it has level which equals to count of available processors. So we need to split our pipeline into smaller parts and set them different levels of concurrency. But we need to connect them somehow and synchronize their speeds.
@@ -154,7 +153,6 @@ let choice wrkfl1 wrkfl2 rollback1 rollback2=
       let completed = ref false
       let lockObj = new obj()
       let synchronized f = lock lockObj f
-
       /// called when a result is available - the function uses locks
       /// to make sure that it calls the continuation only once
       let completeOnce res = 
@@ -168,17 +166,14 @@ let choice wrkfl1 wrkfl2 rollback1 rollback2=
                     Async.Start(rollback1 res)
                 |Right(res) -> 
                     Async.Start(rollback2 res)
-
       /// Workflow that will be started for each argument - run the 
       /// operation, cancel pending workflows and then return result
       let runWorkflow workflow = async {
         let! res = workflow
         completeOnce res }
-
       // Start all workflows using cancellation token
       Async.Start(runWorkflow wrkfl1) 
       Async.Start(runWorkflow wrkfl2) )
-
 let switch (q1:BlockingQueueAgent<_>) (q2:BlockingQueueAgent<_>) =
     let ret1 v = async{ 
         do! q1.AsyncAdd(v)

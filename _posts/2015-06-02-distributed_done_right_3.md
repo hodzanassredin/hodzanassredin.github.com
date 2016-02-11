@@ -255,15 +255,12 @@ let greeter =
         name "greeter"
         body (
             let rec loop() = messageHandler {
-                let! msg = Message.receive() //Wait for a message
-
+                let! msg = Message.receive() 
                 match msg with
-                | Hello ->  printfn "Hello" //Handle Hello leg
+                | Hello ->  printfn "Hello" 
                 | HelloWorld -> printfn "Hello World" //Handle HelloWorld leg
                 | Name name -> printfn "Hello, %s" name //Handle Name leg
-
                 return! loop() //Recursively loop
-
             }
             loop())
     } |> Actor.spawn
@@ -336,13 +333,10 @@ module Udp =
     open System.Net
     open Nessos.FsPickler
     open System.IO
-
     let binary = FsPickler.CreateBinary()
-
     type Mailbox<'msg>(port: int) =
         let event = new Event<'msg>()
         let udp = new UdpClient(port)
-            
         member x.Listen() = 
             let ip = new IPEndPoint(IPAddress.Any, 15000);
             let rec loop () = async{
@@ -354,7 +348,6 @@ module Udp =
             }
             loop() |> Async.Start
             event.Publish
-
         member x.Send msg = async{
            let client = new UdpClient()
            client.EnableBroadcast <- true
