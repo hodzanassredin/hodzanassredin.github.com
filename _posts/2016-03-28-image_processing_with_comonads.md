@@ -240,7 +240,9 @@ let extend f (CA2(a, i, j)) =
 And yes this way works, there is no fast complexity growth, but in terms of raw performance it is far from ideal.
 Because there is a lot of duplicate calls to underlying filters. So ideal solution is to use arrays 
 but prevent, somehow, incorrect composition. And this can be done with phantom types. 
-# What is Phantom type?
+
+# What is a Phantom type?
+
 It is just an additional type variable in generic type, which is used only in type declarations.
 Usually it is used to add some compile time checks. So let’s add phantom type to our comonad.
 
