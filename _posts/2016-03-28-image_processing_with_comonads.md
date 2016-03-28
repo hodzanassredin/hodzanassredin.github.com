@@ -14,7 +14,7 @@ tags : [fsharp, comonads]
 <p class="meta">28 March 2016 &#8211; Karelia</p> 
  
  
-#What is Comonad? 
+# What is Comonad? 
 Comonad is just a dual of a monad. Super simple ;-).
 We could represent monad as a type with a pair of functions
 
@@ -51,7 +51,7 @@ let comonadicFn (Id(v)) = 1 + v
 let compositionC = extend (extract >> fn 1) >> extend comonadicFn
 {% endhighlight %} 
 
-#When we need comonads?
+# When we need comonads?
 We need them when we have to use some additional context in our functions.
 For example, we could use additional execution context like we do in a reader monad.
 
@@ -236,7 +236,7 @@ let extend f (CA2(a, i, j)) =
 And yes this way works, there is no fast complexity growth, but in terms of raw performance it is far from ideal.
 Because there is a lot of duplicate calls to underlying filters. So ideal solution is to use arrays 
 but prevent, somehow, incorrect composition. And this can be done with phantom types. 
-#What is Phantom type?
+# What is Phantom type?
 It is just an additional type variable in generic type, which is used only in type declarations.
 Usually it is used to add some compile time checks. So let’s add phantom type to our comonad.
 
@@ -294,7 +294,7 @@ Final version takes about 242ms.
 [Final code](https://gist.github.com/hodzanassredin/017f0c6d4435067c5fc9) 
 [Lazy array version](https://gist.github.com/hodzanassredin/1cf3914b67c2f68dc26c)
  
-#Recommended reading: 
+# Recommended reading: 
 1. [The codo-notation package](https://hackage.haskell.org/package/codo-notation) 
 2. [Coeffects: The next big programming challenge](http://tomasp.net/blog/2014/why-coeffects-matter/)
 3. [Comonads in Haskell](http://www.slideshare.net/davidoverton/comonad) 
