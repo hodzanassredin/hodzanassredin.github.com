@@ -204,7 +204,7 @@ Let’s execute it. Oh no it takes too long to execute some filters. What is the
 After investigation we could find that complexity of extract function is O(1) 
 and complexity of extend function is O(N). So in case of composition "extend extract >> extend extract"
 final complexity is O(N) and this is ok.
-But in case of "extend (extend extract)" complexity is O(N^2). So if we want to compose 
+But in case of "extend (extend extract >> extract)" complexity is O(N^2). So if we want to compose 
 our functions we have to remove this complexity growth or prevent extending of extended functions.
 First way could be done by implementing array as a lazy array.
 
