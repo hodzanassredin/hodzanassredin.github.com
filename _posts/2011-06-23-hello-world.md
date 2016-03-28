@@ -5,6 +5,6 @@ title: Hello GitHub
 
 h1. {{ page.title }}
 
-p(meta). 23 June 2011 - Saint Petersburg
+<p class="meta">23 June 2014 &#8211; Saint Petersburg</p>
 
 Hello world from github.
