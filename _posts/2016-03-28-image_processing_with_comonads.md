@@ -170,20 +170,23 @@ let gaussLaplace = CArray2D.extend ImageProcessing.gauss2D >> ImageProcessing.la
 And now we could run our code using collection of test images.
 
 {% highlight fsharp %} 
-let apply (ipath, f, fname) =
+open ImageProcessing
+open CArray2D
+
+let applyTransform (ipath, f, fname) =
     Bitmap.load ipath 
-    |> Bitmap.toCarray2d 
-    |> CArray2D.fmap ImageProcessing.toGrayScale
-    |> CArray2D.extend f
-    |> CArray2D.fmap ImageProcessing.fromGrayScale
-    |> Bitmap.fromCarray
+    |> Bitmap.toArray2d 
+    |> Array2D.map toGrayScale
+    |> run f
+    |> Array2D.map fromGrayScale
+    |> Bitmap.fromArray
     |> Bitmap.save (sprintf "%s.out.%s.%s" ipath fname (ipath.Split('.').[1])) 
 
-let tests = [CArray2D.extract >> id, "id";
-            ImageProcessing.gauss2D, "gauss2D";
-            ImageProcessing.laplace2d, "laplace2d";
-            gaussLaplace, "gaussLaplace";
-            contours, "contours"]
+let tests = [extend extract, "extract";
+             extend gauss2D, "gauss2D";
+             extend laplace2d, "laplace2d";
+             extend gaussLaplace, "gaussLaplace";
+             extend contours, "contours"]
 
 let fname = sprintf "D:\\img\\%s" 
 let files = ["test.bmp";
@@ -191,9 +194,10 @@ let files = ["test.bmp";
              "Lena.png";
              "fce2.bmp";
              "tahaa.jpg";] |> List.map fname
+
 for file in files do
     for testf, fname in tests do
-        time (sprintf "%s - %s" file fname) apply (file, testf, fname)
+        time (sprintf "%s - %s" file fname) applyTransform (file, testf, fname)
 {% endhighlight %} 
 
 Let’s execute it. Oh no it takes too long to execute some filters. What is the problem?
