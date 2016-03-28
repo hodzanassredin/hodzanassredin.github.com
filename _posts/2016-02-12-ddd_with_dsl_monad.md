@@ -14,7 +14,7 @@ tags : [fsharp, dsl, comonoid]
 <p class="meta">12 February 2016 &#8211; Karelia</p> 
  
  
-#What is DDD? 
+# What is DDD? 
 Lets check a description from Wikipedia. 
 > Domain-driven design (DDD) is an approach to software development for  
 > complex needs by connecting the implementation to an evolving model. The 
@@ -48,7 +48,7 @@ Actually we can use the same way in fsharp, but this way has some drawbacks and 
 I found several excellent articles about how to do ddd in fsharp.  
 For example [A different look at service design](http://bartoszsypytkowski.com/c-a-different-look-at-service-design/) and [Domain Driven Design with the F# type System](http://fsharpforfunandprofit.com/ddd/). They describe how to model domain in terms of functions and types. But we will try to go deeper. 
  
-#DSL 
+# DSL 
 So ddd is about languages. In programming languages we could build our domain language as external or internal dsl. Internal dsls are better because we could use all existing tools of a host language. Internal dsls could be shallow or deep. Shallow embedding means that we describe our domain in types and have fixed interpretation of the data. It is not very useful, because for testing we want to use a fake interpreter and in production use an optimized interpreter. 
 So we want to build deep internal dsl. How? We could represent all operations as abstract types and compose abstract computations with a computation builder. But we also want to abstract not only from implementation but also from function effects. DDD with interfaces has this problem. For example dependency without effect. 
 {% highlight fsharp %} 
@@ -290,10 +290,10 @@ Code [here](https://gist.github.com/hodzanassredin/8183dd8ded6d47d55de0)
  
 We used an fake ad hoc interpreter in this post, but we could describe interpreter as a data structure(comonad). It allows us to abstract and compose interpreters. More advanced version with comonadic interpreter [here](https://gist.github.com/hodzanassredin/1ae9fad4316bdb502fc9) 
  
-#Result 
+# Result 
 Now we can write abstract programs which are easy to test with fake interpreters and we abstract our code from execution effects. No more code rewrite when we decided to use async/lazy version of some method. 
  
-#Recommended reading: 
+# Recommended reading: 
 1. [Cofun with cofree comonads](http://dlaing.org/cofun/) 
  
  

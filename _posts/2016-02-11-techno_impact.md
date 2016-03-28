@@ -13,9 +13,9 @@ tags : [brain, internet, computer]
 This is a list of texts about relationships between computers and humans. 
 I'll add everything about that here.
 
-#Please comment if you know something interesting about that.
+# Please comment if you know something interesting about that.
 
-#Books
+# Books
 
 1. ["The Shallows" by Nicholas Carr](http://www.nicholascarr.com/?page_id=16)
 2. ["The Glass Cage" by Nicholas Carr](http://www.nicholascarr.com/?page_id=18)
@@ -24,7 +24,7 @@ I'll add everything about that here.
 5. ["Rainbows End" by Vernor Vinge](https://en.wikipedia.org/wiki/Rainbows_End)
 
 
-#Posts
+# Posts
 
 1. [Facebook’s Mental Health Problem](https://medium.com/@katikrause/facebook-s-mental-health-problem-9c48374c1bd8#.ck97t5q71)
 2. [Disconnected: My year without the Internet](http://edition.cnn.com/2013/05/10/tech/web/paul-miller-internet-year/)

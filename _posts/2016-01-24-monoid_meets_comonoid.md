@@ -15,7 +15,7 @@ You should understand what is monoid, in other case go and read [Understanding m
 
 I spend a lot of time trying to understand monads, but never look at monoid because it feels so simple. Actually in pure languages monoid is really simple, just a pair of funcs () -> 'a and ('a * 'a) -> 'a. Second one is some join operation and is ok, but the first one has unit as an input argument. As we remember unit type usually tell us that function can have side effects. But in language like Haskell there are no side effects. So implementation for that function is usually trivial. And if we look at monoid's dual comonoid then we will see a pair of funcs: 'a -> () and 'a -> ('a * 'a). Actually in haskell every type has comonoid implementation for free: fun x -> () and fun x -> x,x. First has a name destroy and the second one is clone or pair. All articles about comonoids usually say nothing. And I didn’t find anyone for fsharp. So I decided to write my own. Because in fsharp we have side effects everywhere and monoids and comonoids could be used to compose them.  
 
-#New language
+# New language
 Lets imagine that we are in the body of Don Syme and have a task to invent a brand new language codename Fsharp vNeXXXt. So lets start.
 We want to be cool guys, so we have to use functional programming. Our main building block will be a function. Inventing a language is a task like an universe creation. And in our universe we have nothing. This universe is a place where programs written in our language will live.  Our universe is inside of other universe "The Interpreter". So we can communicate to this external world somehow. Currently we have no types and we have a name for nothing, it is unit and could be writen as (). Any program written in our language should start from nothing and finish with nothing. It will be a function () -> (). And in our language without types, every function has the same signature () -> (). But they are not the same, because they actually forces our interpreter to do something. But we need a way to compose our program from small building blocks. We could connect output of one func to input of other func. Lets introduce a function composition func/operator(>>) and a pair. Composition func will take a pair of funcs (()->(),()->()) and return a single one. But lets add some fsharp like syntactic sugar (>>)(f1,f2) = f1 >> f2. So a program in our language will be something like that: fn1 >> fn2 >> fn3. But for correctness we also need an associativity rule: 
  (>>)(fn1,(>>) (fn2,fn3))) = (>>)((>>)(fn1,fn2), fn3)).
@@ -207,7 +207,7 @@ That it. Hope you found something interesting for you.
 
 Code is [here](https://gist.github.com/hodzanassredin/1bc1521bb49b215413e2)
 
-#Recommended reading:
+# Recommended reading:
 1. [What does a nontrivial comonoid look like?](http://stackoverflow.com/questions/23855070/what-does-a-nontrivial-comonoid-look-like)
 2. [rust-comonoid](https://github.com/srijs/rust-comonoid)
 

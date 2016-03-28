@@ -9,11 +9,11 @@ tags : [azure, fsharp, monad, ditributed]
 
 <p class="meta">18 April 2015 &#8211; Karelia</p>
 
-#Introduction
+# Introduction
 
 I decided to write a history and current state of our distributed azure project. We started from a simple azure worker and finished with a very complex system. I suppose it will be interesting for developers who is going to build some distributed application and hope this post will help them to avoid some mistakes. In addition, I am going to describe two possible solutions in FSharp for our current problems.
 
-#History of an Azure project
+# History of an Azure project
 
 We started form a single azure worker, it had only two queues one for input and other for output and it was single threaded. Many azure tutorials shows the way to build this kind of worker. We decided to use azure storage queue instead of Azure Service Bus queue. It is cheaper and has better SLA. For possible future changes we abstracted queue in a simple C# interface:
 
@@ -329,7 +329,7 @@ public BaseMessage BuildClassificationMessage(
 }
 
 {% endhighlight %}
-#Big problems
+# Big problems
 We created some code, which allows us to express distributed computations for azure platform. Very interesting, but now we are using Microservices pattern. You can read more [here](http://microservices.io/patterns/microservices.html). We can decompose our algorithms into small pieces and they could be deployed separately without breaking currently executing pipelines. Unfortunately our system described above have a lot of problems which are really difficult to solve.  With all that hype about Microserices I read many articles and unfortunately found no answers to my questions.
 Let us start from our solution description. Our solution has possibility to express only SEQUENTIAL pipelines with a primitive error handling. That’s all. No possibility to express cancellation,  loops, if conditions and other control flow operators, fork/join parallelization. Even with only sequential pipelines, it is damn hard to use. 
 
@@ -343,7 +343,7 @@ Let us start from our solution description. Our solution has possibility to expr
 
 All from that list increases time from requirement to release. It is just takes too long to decompose, workaround problems with control flow and test.
 
-#Ideal solution in theory
+# Ideal solution in theory
 So currently in our project, we have a lot of boilerplate code with workarounds, which are hard to support. Some time ago, I started to think how can we solve that problems. Main idea was to use some actor framework like akka.net or Orleans. But after some attempts to emulate system on a local computer I found that they can't solve all that problems. There is again small pieces of more complex pipelines. There is no abstract way to compose complex pipelines in code. Quote from @runarorama's twitter  "Actors are an implementation detail for higher-order constructs, not a programming model". Actors are not a free from their own [problems](http://pchiusano.blogspot.ru/2010/01/actors-are-not-good-concurrency-model.html) too. Depression, depression, depression.
 However, several days ago I received a question in twitter from @zahardzhan: "Do you use monads described in your blog in practice?" My answer was "NO". I decided to refresh my memories and read my posts just for fun. And after reading of a [post](http://hodzanassredin.github.io/2014/07/07/real_world_monad_problem.html) about Workflow monad. I decided to use a way described in this post to express pipelines as workflows, and after some thoughts and experiments it was transformed into something new.
 So let’s, as we do in the post about workflow monad, start from an ideal solution which allows us to do:
@@ -360,7 +360,7 @@ So let’s, as we do in the post about workflow monad, start from an ideal solut
 
 As you can see I did not list here other problems and I'm going to start from a something simple and after that add new possibilities one by one. 
 
-#FSharp solution
+# FSharp solution
 I'm not going to write about whole way of thinking just describe my solution in short and show you some code.
 I decided to write a computation expression builder, which could do everything described above.
 

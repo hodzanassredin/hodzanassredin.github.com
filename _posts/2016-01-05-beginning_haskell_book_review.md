@@ -18,13 +18,13 @@ But RWH now seems to be a little bit outdated and I checked several books in sto
 and finally bought [Beginning Haskell A Project-Based Approach](http://www.apress.com/9781430262503)
 by Alejandro Serrano Mena. Yesterday I finally finished it and I'm proud of that.))
 
-#Book summary
+# Book summary
 Every book has three types of content: boring, interesting, hard. Mainly theses types are subjective because every reader has different skills and knowledge and the book, at the same time, focuses on a wide audience.
 And it is always hard to keep a balance between simplicity and complexity. So I prefer books where every chapter is orthogonal to each other so I can skip parts which I understand and concentrate on interesting and hard parts.
 But book usually is not just a collection of articles, but has some context and main theme to connect different concepts and describes how to use them together. And now I can conclude that this book probably not perfect, but very good in terms of that. Before reading I had knowledge about monads, monoids, type classes, monad transformers, but I never had a whole picture. And this book finally connects everything in my head. The book is modern so it descries latest changes in GHC and mention [Stack](http://docs.haskellstack.org/en/stable/README.html). It is also practical, main theme is how to build online store in Haskell. But do not expect something like [Agile Web Development with Rails 4](https://pragprog.com/book/rails4/agile-web-development-with-rails-4). It is always funny when people from Haskell, Golang, Fsharp(Suave.IO ;-)) ... are trying to sell their minimal web frameworks as a "You can do everything".
 All of them are too far away from Django and Rails. I recommend not to fight with giants, but to sell them for more appropriate tasks. For example Golang's http is for speed, Suave.IO is for minimalistic web services/front ends with very complex logic or for extremely complex SPAs when used with WebSharper or when you need to keep common code base for frontend Xamarin app and backend api server. So the book is very practical, it even describes K-means for clients clustering. The book describes a lot, but unfortunately some things are mentioned, but not described(free monads) or not mentioned at all(comonads). So if you are like me or just a fp beginner I highly recommend this book.
 
-#Chapters summary
+# Chapters summary
 
 ## Chapter 1
 - Boring: Installation. What is FP. Why Haskell?
@@ -101,10 +101,10 @@ Links, summary.
 ## Appendix 2
 [Spoiler do not click if you are going to read the book ;-)](https://github.com/DanBurton/tardis)]
 
-#P.S.
+# P.S.
 I still doesn't know Haskell well and have just a small understanding of monads, but now I can read Haskell code.
 Will I use Haskell? Definitely no. I've already have golang for speed, python for ready to use libs, ml and web programming, fsharp for business logic and web/mobile UI. So I don't see a place for Haskell in my life. But now I have ability to bring some patterns from Haskell to my Fhsarp code and also know some interesting stuff to learn like attribute grammars. What's next? I've almost finished to learn existing mainstream languages. This year I'm going to refresh my knowledge of clojure/racket and will try to use them intensively. Because SICP is still the best. I will write a blog post about that next January. Will be interesting to finally compare clojure and fsharp. Who is number one?
 
-#Further reading
+# Further reading
 - [Origami programming](http://www.cs.ox.ac.uk/people/jeremy.gibbons/publications/origami.pdf)
 - [Functional Programming with Bananas, Lenses, Envelopes and Barbed Wire](http://eprints.eemcs.utwente.nl/7281/01/db-utwente-40501F46.pdf)

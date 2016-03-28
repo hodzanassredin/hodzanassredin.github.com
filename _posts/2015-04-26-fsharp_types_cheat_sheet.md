@@ -9,7 +9,7 @@ tags : [azure, fsharp, monad, ditributed]
 
 <p class="meta">26 April 2015 &#8211; Karelia</p>
 
-#Description
+# Description
 Just a small cheat sheet, it describes some f# types as a composition of smaller ones. Sometimes it is easier to understand a difference between some types in behaviour and semantics by looking at their type’s signatures. However, types could be very complex, so we want to exam types without infrastructure details and probably as a composition of smaller ones. For example with this cheat sheet, it is easy to understand a difference between some very similar types like Observable<'T> and NessosStream<'T> and see that NessosStream is just  an impure reducer.
 {% highlight fsharp %}
 open System
