@@ -19,6 +19,7 @@ So I decided to describe how to do it.
  
 # What is a task queue? 
 Task queue allows clients of some service asynchronously send tasks to it. Usually service has many clients and probably many workers. In short whole workflow looks like this:
+
 1. Client puts task into a queue
 2. Workers in loop periodically check the queue for a new task, if task exists then worker execute it
 But there are some additional requirements to a queue:
@@ -70,8 +71,10 @@ cq2.send([3,4,0])
 {% endhighlight %} 
 So sending was easy to implement and what about receiving side?
 First of all, we need to find all queue lists. There are three options:
-1. Use keys "prefix:*" command for all lists search. But this command could cause serious problems on production, it may ruin performance when it is executed against large databases. So never use this option.
-2. use scan command this command works the same as keys, but has no performance problems.
+
+
+1. Use KEYS "prefix:*" command for all lists search. But this command could cause serious problems on production, it may ruin performance when it is executed against large databases. So never use this option.
+2. use SCAN command this command works the same as keys, but has no performance problems.
 3. Store all names in a redis set and add a list name to a set on massage sending and delete a queue form a set when all messages are processed. Unfortunately, this step requires additional code to implement so we will use second option.
 
 When we found all queues, we need to randomly sort them to guaranty that all queues have the same probability to be processed. After that, we need to get required count of messages in one batch (with redis pipeline). After that if no messages found then we need to run whole process again in other case handle messages and delete them after processing. Also we need to prevent double processing of a message in a list and prevent message lose caused by exceptions during message processing, to do that we will use RPOPLPUSH command which atomically removes message from a list and put it into an additional "processing" list and return value to a caller. So we will use additional list for every queue with key "processing:queue_name". After message handling we must remove it from prccessing list. But in case of several unsuccessful attempts to process message we need to finally move it to a deed letters. As a dead letters store we will use redis set with key "dead:queue_name". From time to time we need to check processing list and if attempts count of a message is lower than max allowed count then put it back to a client list or in other case put it into dead letters set.
