@@ -22,7 +22,9 @@ Task queue allows clients of some service asynchronously send tasks to it. Usual
 
 1. Client puts task into a queue
 2. Workers in loop periodically check the queue for a new task, if task exists then worker execute it
+
 But there are some additional requirements to a queue:
+
 1. Quality of service: One client should not block other client’s requests
 2. Batch processing: clients and workers should have possibility to put and get several tasks at once for better performance.
 3. Reliability: if worker fails during processing of a task after some time this task have to be handed by other or the same worker again.
