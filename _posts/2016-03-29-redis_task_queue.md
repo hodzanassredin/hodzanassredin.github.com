@@ -21,7 +21,7 @@ So I decided to describe how to do it.
 Task queue allows clients of some service asynchronously send tasks to it. Usually service has many clients and probably many workers. In short whole workflow looks like this:
 
 1. Client puts task into a queue
-2. Workers in loop periodically check the queue for a new task, if task exists then worker execute it
+2. Workers in loop periodically check the queue for a new task, if task exists then worker executes it
 
 But there are some additional requirements to a queue:
 
