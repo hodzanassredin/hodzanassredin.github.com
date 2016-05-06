@@ -30,7 +30,7 @@ So everything is ready and we can start. First step is to create a resource grou
 {% highlight bash %} 
 azure group create cassandra-group "West Europe"
 {% endhighlight %} 
-We will put all vms into subnet of a virtual network. Let’s create them.
+We will put all vms into subnet of a virtual network. 
 {% highlight bash %} 
 azure network vnet create cassandra-group cassandra-net "West Europe" 
 azure network vnet subnet create cassandra-group cassandra-net cass-sub -a 10.0.0.0/24
@@ -250,7 +250,7 @@ def cassandra_restart():
 def cassandra_log():
     sudo("tail /var/log/cassandra/system.log")
 {% endhighlight %} 
-Andour cassandra configuration.
+And our cassandra configuration.
 {% highlight python %} 
 seed_provider = [{'class_name': 'org.apache.cassandra.locator.SimpleSeedProvider', 
                   'parameters': [{'seeds': ",".join(cluster_private_ips[:3])}]}]
