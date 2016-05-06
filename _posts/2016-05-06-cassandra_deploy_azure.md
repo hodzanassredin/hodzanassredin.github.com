@@ -2,7 +2,7 @@
 published: true 
 layout: post 
 title: Simple cassandra cluster deployment with fabric and azure cli.
-tags : [redis, python, queue] 
+tags : [cassandra, azure, fabric] 
 --- 
  
  
@@ -13,8 +13,7 @@ tags : [redis, python, queue]
  
 <p class="meta">05 May 2016 &#8211; Karelia</p> 
  
-In our project deployed to azure we used single node cassandra cluster during test phase. It was deployed manually as described in some blog posts. But after some time we decided to move to a real single datacentr cluster with 3 nodes for more realistic tests. We already have scripts for farm creation from vm images but unfortunately cassandra config is a little bit harder and some time ago new "Resource management" deployment mode for azure was introduced. After some investigation I found existing ready to use tepmplates for cassandra unfortunately some of them are broken and some of them uses Datastax Enterprise version but we want to use open source version. And from my point of view all that templates are too hard to write and understand(if you dont have a time) and this time we decided not to use vm images at all becouse in case of changes you need to maintain them. So we decided to write some simple scripts which will use azure cli and Fabric for deployment.
-So lets start.
+In our project, deployed to azure, we used single node cassandra cluster during test phase. It was deployed manually as described in some blog posts. But after some time we decided to move to a real single datacenter cluster with 3 nodes for more realistic tests and use version 3 with secondary indexes and materialized views. We already have scripts for farm creation from vm images but unfortunately cassandra config is a little bit harder and some time ago new "Resource management" deployment mode for azure was introduced. After some investigation I found existing, ready to use, templates for cassandra, unfortunately some of them are broken and some of them uses Datastax Enterprise version, but we want to use open source version. And from my point of view all that templates are too hard to write and understand (if you don’t have a time) and this time we decided not to use vm images at all, because in case of changes you need to maintain them. So we decided to write some simple scripts which will use azure cli and Fabric for deployment.
 First of all you need to install [azure cli](https://azure.microsoft.com/ru-ru/documentation/articles/xplat-cli-install/) and [fabric](http://www.fabfile.org/installing.html).
 First thing to do is to [login](https://azure.microsoft.com/en-us/documentation/articles/xplat-cli-connect/) into your azure account and select subscription and set resource mode.
 {% highlight bash %} 
@@ -22,7 +21,7 @@ azure login
 azure account set YourSubscriptionName
 azure config mode arm
 {% endhighlight %} 
-if you dont see your subsription then you need to execute 
+if you don’t see your subscription then you need to execute 
 {% highlight bash %} 
 azure account download
 azure account import PathToDownloadedFile...
@@ -31,25 +30,25 @@ So everything is ready and we can start. First step is to create a resource grou
 {% highlight bash %} 
 azure group create cassandra-group "West Europe"
 {% endhighlight %} 
-We will put all vms into subnet of a virtual network. Lets create them.
+We will put all vms into subnet of a virtual network. Let’s create them.
 {% highlight bash %} 
 azure network vnet create cassandra-group cassandra-net "West Europe" 
 azure network vnet subnet create cassandra-group cassandra-net cass-sub -a 10.0.0.0/24
 {% endhighlight %} 
-Next step is optional for you and do it only in case if want to acces your nodes from internet. We will create a three(number of nodes) public ips in our group. 
+Next step is optional for you and do it only in case if want to access your nodes from internet. We will create a three (number of nodes) public ips in our group. 
 {% highlight bash %} 
 azure network public-ip create "cassandra-group" "cass-ip-1" "West Europe" -a Static
 azure network public-ip create "cassandra-group" "cass-ip-2" "West Europe" -a Static
 azure network public-ip create "cassandra-group" "cass-ip-3" "West Europe" -a Static
 {% endhighlight %} 
-Now it is time for network interfaces. We will create them in our netwrok and bind them to public ips.
+Now it is time for network interfaces. We will create them in our network and bind them to public ips.
 {% highlight bash %} 
 azure network nic create "cassandra-group" "cass-nic-1" "West Europe" --subnet-name "cass-sub" --subnet-vnet-name "cassandra-net" -p "cass-ip-1" -a "10.0.0.4"  
 azure network nic create "cassandra-group" "cass-nic-2" "West Europe" --subnet-name "cass-sub" --subnet-vnet-name "cassandra-net" -p "cass-ip-2" -a "10.0.0.6"  
 azure network nic create "cassandra-group" "cass-nic-3" "West Europe" --subnet-name "cass-sub" --subnet-vnet-name "cassandra-net" -p "cass-ip-3" -a "10.0.0.8"  
 {% endhighlight %} 
 
-Our nics are hideen by azures firewall so we need to configure it and add allow rules for ssh and cassandra ports.
+Our nics are hidden by azure’s firewall so we need to configure it and add allow rules for ssh and cassandra ports.
 {% highlight bash %} 
 azure network nsg create "cassandra-group" "cass-nsg" "West Europe" 
 azure network nsg rule create -g cassandra-group -a cass-nsg -n cass-rule -c Allow -p Tcp -r Inbound -y 100 -f Internet -o * -e * -u 9042
@@ -111,7 +110,7 @@ cluster_private_ips = [public_to_private[ip] for ip in cluster_ips]
 print "public_to_private", public_to_private
 print "public", ",".join(cluster_ips)
 {% endhighlight %} 
-Fabric uses roledefs as a identity of a roup of vms for a task execution we need two: one for all cluster nodes and second one for only one node of a cluster for cqlsh commands. Also we need to specifu ssh user and key file.
+Fabric uses roledefs as an identity of a group of vms for a task execution, we need two: one for all cluster nodes and second one for only one node of a cluster for cqlsh commands. Also we need to specify ssh user and key file.
 {% highlight python %} 
 env.roledefs.update({
     'cassandra': cluster_ips,
@@ -182,7 +181,7 @@ def install_cassandra_dsc():
 {% endhighlight %} 
 For cassandra configuration we have to write a simple script which will allow us to read and write cassandra settings in /etc/cassandra/cassandra.yaml
 
-Lets name it yaml_option.py
+Let’s name it yaml_option.py
 {% highlight python %} 
 #!/usr/bin/python
 import sys
@@ -323,7 +322,7 @@ As you can see for cqlsh we use rc file cqlshrc.
 [connection]
 client_timeout = 30
 {% endhighlight %} 
-And our schema.cql is just a cql file with keyspace and tables creation. 
+And our schema.cql is just a cql file with a keyspace and tables creation. 
 And final deploy task. 
 {% highlight python %}
 def deploy():
@@ -346,7 +345,7 @@ fab -R cassandra_any cassandra_create_admin:user,password
 fab -R cassandra_any cassandra_set_schema:user,password
 {% endhighlight %} 
 
-Now our cluster is ready to use. You could use public ips as the cluster adress.
+Now our cluster is ready to use. You could use public ips as the cluster address.
 
 
 # Recommended reading: 
