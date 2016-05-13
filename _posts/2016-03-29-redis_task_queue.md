@@ -131,14 +131,14 @@ class WorkerRedisQueue():
         else:
             print "skip refresh"
 
-    def receive(self, count):
+    def receive(self, msg_count):
         self.refresh()
         count = len(self.list_names)
         if count == 0:
             print "queues not found"
             return []
         p = self.redis.pipeline()
-        for i in range(count):
+        for i in range(msg_count):
             l = self.list_names[randint(0, count - 1)]
             p.rpoplpush(l,self.processing_lname)
         msgs = p.execute()
