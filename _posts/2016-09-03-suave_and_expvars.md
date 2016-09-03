@@ -16,9 +16,9 @@ tags : [datadog, suaveio, fsharp]
 
 At work, we have a lot of infrastructure and we have to know what is going on with our servers and apps.
 There are different options to do that and one of them is [Datadog](https://www.datadoghq.com/) service.
-Datadog can handle all stats from your servers and show you nice graphs and send you alerts in case of a problem. 
-To use it you have to create an account and install datadog agent service on your server.
-Today I decided to write an suave.io web site and decided to connect it to our datadog account to show some info
+Datadog can handle all stats from your servers and show you nice graphs and send alerts in case of a problem. 
+To use it, you have to create an account and install datadog agent service on your server.
+Today I decided to write an suave.io web site and connect it to our datadog account to show some info
 about request rates and so on. There are different options how to connect your app to your datadog account.
 For example you could write datadog custom check, but it is easier to use existing one.
 We use golang expvars checks for our golang servers, so I decided to emulate them in suave. 
