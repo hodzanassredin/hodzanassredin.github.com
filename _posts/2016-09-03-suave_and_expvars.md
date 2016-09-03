@@ -16,17 +16,17 @@ tags : [datadog, suaveio, fsharp]
 
 At work, we have a lot of infrastructure and we have to know what is going on with our servers and apps.
 There are different options to do that and one of them is [Datadog](https://www.datadoghq.com/) service.
-Datadog allows you to handle all stats from your servers and show you nice graphs and send you alerts in case of a problem. 
+Datadog can handle all stats from your servers and show you nice graphs and send you alerts in case of a problem. 
 To use it you have to create an account and install datadog agent service on your server.
 Today I decided to write an suave.io web site and decided to connect it to our datadog account to show some info
-about request rates and so on. There are different options how to connect your app to datadog.
-For example you could write datadog custom check, but it is simplier to use existing one.
-We use golang expvars check for our golang servers and expvars is trivial so I decided to emulate it in suave. 
+about request rates and so on. There are different options how to connect your app to your datadog account.
+For example you could write datadog custom check, but it is easier to use existing one.
+We use golang expvars checks for our golang servers, so I decided to emulate them in suave. 
 
 
 # What is expvars? 
-Golang expvars is a golang module which allows you to create some variables and expose them via web interface in json format.
-You could find more info [here](https://golang.org/pkg/expvar/). This is an example of expvars output. There are some predefined expvars in golang so you could check memory stats and so on.
+Expvars is a golang module which allows you to create some variables and expose them via web interface in json format.
+You could find more info [here](https://golang.org/pkg/expvar/). This is an example of expvars output. There are some predefined expvars in golang, so you could check memory stats and so on.
 {% highlight json %} 
 {
 "cmdline": ["/xxx"],
@@ -38,9 +38,9 @@ You could find more info [here](https://golang.org/pkg/expvar/). This is an exam
 
 By convention address of this json is "IP:8000/debug/vars".
 
-Lets implement one expvar in suave app.
-First of all you have to create a datadog account and after that install datadog agent as described [here](http://docs.datadoghq.com/guides/basic_agent_usage/).
-In our case this is ubuntu server. After installation we have to create "/etc/dd-agent/conf.d/go_expvar.yaml" file.
+Let’s implement one expvar in a suave app.
+First of all, you have to create a datadog account and after that install datadog agent as described [here](http://docs.datadoghq.com/guides/basic_agent_usage/).
+In our case this is an ubuntu server. After installation we have to create "/etc/dd-agent/conf.d/go_expvar.yaml" file.
 
 {% highlight yaml %} 
 init_config:
@@ -55,10 +55,10 @@ Actually we also need to comment this line in  "/etc/dd-agent/checks.d/go_expvar
 #self.get_gc_collection_histogram(data, tags, url, namespace)
 {% endhighlight %} 
 This line will throw in case of missing memstats data.
-Now restart datadog agent "/etc/init.d/datadog-agent restart")
+Now restart the datadog agent "/etc/init.d/datadog-agent restart")
 More about how to setup datadog with expvars you could find [here](https://www.datadoghq.com/blog/instrument-go-apps-expvar-datadog/)
-So last step is to create suave.io app with hellorps expvar and run it.
-We will use basic suave script template
+Last step is to create suave.io app with “hellorps” expvar and run it.
+We will use suave script template
 
 {% highlight fsharp %} 
 open System
@@ -96,7 +96,7 @@ open System.Runtime.Serialization
 open System.Net
 
 {% endhighlight %} 
-Now we have to add some thread safe rate counter.
+Now we have to add a thread safe rate counter.
 {% highlight fsharp %} 
 type RateCounter() = 
     let mutable lastTick = System.Environment.TickCount
@@ -120,7 +120,7 @@ type RateCounter() =
 
 let helloCounter = RateCounter() 
 {% endhighlight %} 
-Now we have to create hello webpart and start server.
+Create hello webpart and start server.
 {% highlight fsharp %} 
 let hello (x : HttpContext) =
       helloCounter.Inc 1 
@@ -138,7 +138,7 @@ let _, expvarsServer = startWebServerAsync expvarsConfig (path "/debug/vars"
                         <| helloCounter.Get() ) ctx))
 
 {% endhighlight %} 
-And for tests we will create load generator.
+create load generator.
 {% highlight fsharp %} 
 let client = new WebClient ()
 let rec gen_load sleepMs = async{
@@ -147,14 +147,14 @@ let rec gen_load sleepMs = async{
     return! gen_load(sleepMs) 
 }
 {% endhighlight %} 
-And run everything
+And finally run everything
 {% highlight fsharp %} 
 Async.Parallel [server; expvarsServer; gen_load(0)] 
     |> Async.RunSynchronously 
     |> ignore
 {% endhighlight %} 
 
-Everything is done. Now we can go to datadog and see our metric.
+Done. Now we can go to datadog and see our metric.
 
 ![Datadog Metric]({{ site.url }}/images/datadogexp.png )
 
