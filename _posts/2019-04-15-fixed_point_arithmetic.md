@@ -30,10 +30,11 @@ At the heart of our library we will use magic scale function.
 {% highlight fsharp %} 
 open System
 
-let scale (n3: int16) (n2: int16) (n1: int16) : int16 = (int n1) * (int n2) / (int n3) |> int16
+let scale (n3: int16) (n2: int16) (n1: int16) : int16 = 
+	(int n1) * (int n2) / (int n3) |> int16
 {% endhighlight %} 
 
-AS you could see we multiply two Int16 and put the result into Int32 to prevent overflow. 
+As you could see we multiply two Int16 and put the result into Int32 to prevent overflow. 
 After that we divide Int32 by Int16 and return result as Int16.
 So how could we use it?
 
@@ -80,9 +81,9 @@ Now it is time to FixedPA. We are going to map fractions and floating numbers (D
 
 We have possibility to store values from -32768s to 32767s in Int16.
 And for example, we are going to use only floating-point numbers from -2. to 2.
-So, we have 1. mapped to 16384 and 1.9999 mapped to 32767s and -2. mapped to -32768s.
-And finally, we need to define two operation multiplication and division.
-So basically to map a value into fixed world we need to multiply by 16384(or just do binary left shift 14).
+So, we have 1. mapped to 16384(in other case it could be 256 and so on) and 1.9999 mapped to 32767s and -2. mapped to -32768s.
+And finally, we need to define two operations multiplication and division.
+So basically to map a value into fixed world we need to multiply it by 16384(or just do binary left shift 14).
 
 {% highlight fsharp %} 
 let _1 = 16384s
@@ -94,7 +95,7 @@ Second one is for multiplication.
 We also need some helpers to move between floating and fixed worlds. 
 
 {% highlight fsharp %} 
-let toDouble (x: int16) = x .* 10000s |> double |> fun x -> x / 10000.
+let toDouble (x: int16) : double = x .* 10000s |> double |> fun x -> x / 10000.
 let toFixed (x: double) : int16 = x * 10000. |> int16 |> fun x -> x ./ 10000s
 {% endhighlight %} 
 
