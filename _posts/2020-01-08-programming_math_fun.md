@@ -19,7 +19,7 @@ It is always interesting to start from the base things and try to rethink them f
 
 # The numbers
 
-Let�s start with the number. Initially, we have only nothing(zero)
+Let's start with the number. Initially, we have only nothing(zero)
 and to count something we need to have something nonzero. We are like Hegel now :-).
 And we need a way to combine things together and express any natural number even infinity.
 
@@ -74,6 +74,7 @@ let checkOpt f n1 n2 opName =
 
 {% endhighlight %}
 
+
 # Arithmetic
 
 Now we are ready to start with arithmetic. But even a simple decrement from zero is not supported in our numbers.
@@ -92,7 +93,7 @@ let dec = function
 {% endhighlight %}
 
 We are ready for addition and subtraction.
-One interesting thing to note I expected to see unfold in subtraction, but it is fold probably because of unsupported negative numbers. We can see sum as an increment in a for loop.
+One interesting thing to note, I expected to see unfold in subtraction, but it is fold, probably because of unsupported negative numbers. We can see sum as an increment in a for loop.
 And minus to find the argument of the sum function with a given result and argument.
 And we don't need two functions because addition is commutative. So "swap sum" function is equal to sum.
 
@@ -147,8 +148,8 @@ It was fun to see that arithmetic looks so interesting in a functional manner.
 The next steps will be to support all real numbers (including irrational) and root function.
 
 One interesting thing is about div by zero.
-If we delete any number (even zero) by zero, we will have an infinite sequence as a result.
-It is a great start to check different kinds of infinity and to add infinity detector into fold unfold functions.
+If we divide any number (even zero) by zero, we will have an infinite sequence as a result.
+It is a great start to check different kinds of infinity and to add infinity detector into fold, unfold functions.
 For example, we can keep the whole history of a state and try to find a current state in the state history.
 And extend our number with Infinity case. We will be able to express rational numbers.
 Unfortunately, it will not work for irrational numbers but who knows about other ways to check for infinity. Probably we can express them as a continued fraction.
@@ -161,7 +162,7 @@ let inf2 = div Zero Zero
 
 Math is fun.
 
-[AlgorithmicAdventures](https://www.amazon.com/Algorithmic-Adventures-Knowledge-Juraj-Hromkovi%C4%8D/dp/3540859853)
+[Algorithmic Adventures](https://www.amazon.com/Algorithmic-Adventures-Knowledge-Juraj-Hromkovi%C4%8D/dp/3540859853)
 
 [Full code](https://gist.github.com/hodzanassredin/e65c5d13956cb8d5533e1b76fcb2ccfa)
 
