@@ -19,7 +19,7 @@ It is always interesting to start from the base things and try to rethink them f
 
 # The numbers
 
-Let’s start with the number. Initially, we have only nothing(zero)
+Letï¿½s start with the number. Initially, we have only nothing(zero)
 and to count something we need to have something nonzero. We are like Hegel now :-).
 And we need a way to combine things together and express any natural number even infinity.
 
@@ -67,7 +67,8 @@ let evalOpt o = match o with None -> -1 | Some(o) -> eval o
 //check some function and print result
 let check f n1 n2 opName =
     f (number n1) (number n2) |> eval |> printfn "%d%s%d=%d" n1 opName n2
-//check some function which returns optional result and print int for some number or -1 for Nothing
+//check some function which returns optional result 
+//and print int for some number or -1 for Nothing
 let checkOpt f n1 n2 opName =
     f (number n1) (number n2) |> evalOpt |> printfn "%d%s%d=%d" n1 opName n2
 
@@ -114,7 +115,8 @@ Now we are ready for more advanced functions and they look interesting, we can s
 {% highlight fsharp %}
 let mul a b = fold (sum a) Zero b //foreach b add a to acc, acc is zero initially
 
-let div a b = unfold (swap minus b) a //while we can minus b from acc inc res , acc initially is a
+//while we can minus b from acc inc res, acc initially is a
+let div a b = unfold (swap minus b) a 
 
 let pow a b = fold (mul a) (inc Zero) b
 
